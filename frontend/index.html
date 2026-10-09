@@ -2,9 +2,26 @@
 <html lang="it">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EV Purchase Advisor — Decision Support Engine</title>
+    <meta
+      name="description"
+      content="EV Purchase Advisor — calcola il costo totale di possesso, il break-even e la convenienza reale di passare a un'auto elettrica rispetto alla tua auto attuale."
+    />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b1220" />
+    <title>EV Purchase Advisor — Conviene passare all'elettrico?</title>
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('ev-theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (stored === 'dark' || (!stored && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
