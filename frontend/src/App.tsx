@@ -4,16 +4,24 @@ import { fetchDemoAnalysis, createAnalysis } from './services/api';
 import { RecommendationBadge } from './components/RecommendationBadge';
 import { AnalysisCharts } from './components/AnalysisCharts';
 import { AnalysisWizard } from './components/AnalysisWizard';
-import { Zap, ShieldAlert, Sparkles, RefreshCw, SlidersHorizontal, Calculator } from 'lucide-react';
+import { Zap, ShieldAlert, Sparkles, RefreshCw, SlidersHorizontal, Calculator, Share2, FileText, Check } from 'lucide-react';
+import { fetchAnalysisById } from './services/api';
 
 export const App: React.FC = () => {
   const [analysis, setAnalysis] = useState<FullAnalysisResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showWizard, setShowWizard] = useState<boolean>(false);
+  const [copied, setCopied] = useState<boolean>(false);
 
   useEffect(() => {
-    loadDemoAnalysis();
+    const params = new URLSearchParams(window.location.search);
+    const analysisId = params.get('id');
+    if (analysisId) {
+      loadSavedAnalysis(analysisId);
+    } else {
+      loadDemoAnalysis();
+    }
   }, []);
 
   const loadDemoAnalysis = async () => {
@@ -29,6 +37,19 @@ export const App: React.FC = () => {
     }
   };
 
+  const loadSavedAnalysis = async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchAnalysisById(id);
+      setAnalysis(data);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Impossibile caricare l’analisi salvata.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCustomAnalysis = async (payload: any) => {
     setLoading(true);
     setError(null);
@@ -36,11 +57,26 @@ export const App: React.FC = () => {
       const data = await createAnalysis(payload);
       setAnalysis(data);
       setShowWizard(false);
+      if (data.id) {
+        window.history.pushState({}, '', `?id=${data.id}`);
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Errore nel calcolo dell’analisi.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleShare = () => {
+    if (!analysis?.id) return;
+    const shareUrl = `${window.location.origin}${window.location.pathname}?id=${analysis.id}`;
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  const handleExportPdf = () => {
+    window.print();
   };
 
   return (
@@ -59,9 +95,31 @@ export const App: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {analysis && (
+              <>
+                <button
+                  onClick={handleShare}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-card text-foreground font-medium text-xs hover:bg-muted transition-all"
+                  title="Copia link per condividere l'analisi"
+                >
+                  {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4" />}
+                  <span>{copied ? 'Copiato!' : 'Condividi'}</span>
+                </button>
+
+                <button
+                  onClick={handleExportPdf}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-card text-foreground font-medium text-xs hover:bg-muted transition-all print:hidden"
+                  title="Esporta Report PDF"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Esporta PDF</span>
+                </button>
+              </>
+            )}
+
             <button
               onClick={() => setShowWizard(!showWizard)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 shadow-sm transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 shadow-sm transition-all print:hidden"
             >
               <SlidersHorizontal className="w-4 h-4" />
               {showWizard ? 'Chiudi Wizard' : 'Nuova Analisi'}

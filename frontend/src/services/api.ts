@@ -14,6 +14,12 @@ export async function fetchDemoAnalysis(): Promise<FullAnalysisResponse> {
   return res.json();
 }
 
+export async function fetchAnalysisById(id: string): Promise<FullAnalysisResponse> {
+  const res = await fetch(`${API_BASE}/analyses/${id}`);
+  if (!res.ok) throw new Error('Failed to fetch analysis');
+  return res.json();
+}
+
 export async function createAnalysis(payload: unknown): Promise<FullAnalysisResponse> {
   const res = await fetch(`${API_BASE}/analyses`, {
     method: 'POST',

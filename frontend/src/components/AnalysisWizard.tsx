@@ -303,15 +303,122 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({ onRunAnalysis, i
               onChange={(e) => setOwnership({ ...ownership, horizon_years: Number(e.target.value) })}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Valore Permuta Usato (€)</label>
-            <input
-              type="number"
-              className="w-full p-2 rounded border border-input bg-background"
-              value={ownership.trade_in_value}
-              onChange={(e) => setOwnership({ ...ownership, trade_in_value: Number(e.target.value) })}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Valore Permuta Usato (€)</label>
+              <input
+                type="number"
+                className="w-full p-2 rounded border border-input bg-background"
+                value={ownership.trade_in_value}
+                onChange={(e) => setOwnership({ ...ownership, trade_in_value: Number(e.target.value) })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Modalità Acquisto / Finanziamento</label>
+              <select
+                className="w-full p-2 rounded border border-input bg-background font-medium"
+                value={ownership.financing.financing_type}
+                onChange={(e) =>
+                  setOwnership({
+                    ...ownership,
+                    financing: {
+                      ...ownership.financing,
+                      financing_type: e.target.value as 'CASH' | 'LOAN' | 'FINANCING' | 'LEASING',
+                    },
+                  })
+                }
+              >
+                <option value="CASH">Acquisto Diretto (Cash)</option>
+                <option value="LOAN">Finanziamento / Prestito Tradizionale</option>
+                <option value="LEASING">Leasing / Noleggio con Maxi-Rata Finale</option>
+              </select>
+            </div>
           </div>
+
+          {ownership.financing.financing_type !== 'CASH' && (
+            <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-3">
+              <h4 className="text-sm font-semibold text-foreground">Dettagli Finanziamento / Leasing</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1">Anticipo (€)</label>
+                  <input
+                    type="number"
+                    className="w-full p-2 rounded border border-input bg-background"
+                    value={ownership.financing.down_payment}
+                    onChange={(e) =>
+                      setOwnership({
+                        ...ownership,
+                        financing: { ...ownership.financing, down_payment: Number(e.target.value) },
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">Durata (Mesi)</label>
+                  <input
+                    type="number"
+                    className="w-full p-2 rounded border border-input bg-background"
+                    value={ownership.financing.duration_months}
+                    onChange={(e) =>
+                      setOwnership({
+                        ...ownership,
+                        financing: { ...ownership.financing, duration_months: Number(e.target.value) },
+                      })
+                    }
+                  />
+                </div>
+                {ownership.financing.financing_type === 'LEASING' ? (
+                  <>
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Canone Mensile Leasing (€)</label>
+                      <input
+                        type="number"
+                        className="w-full p-2 rounded border border-input bg-background"
+                        value={ownership.financing.lease_monthly_fee ?? 0}
+                        onChange={(e) =>
+                          setOwnership({
+                            ...ownership,
+                            financing: { ...ownership.financing, lease_monthly_fee: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Valore Residuo (%) Balloon Payment</label>
+                      <input
+                        type="number"
+                        step="1"
+                        className="w-full p-2 rounded border border-input bg-background"
+                        value={ownership.financing.residual_value_percentage ?? 40}
+                        onChange={(e) =>
+                          setOwnership({
+                            ...ownership,
+                            financing: { ...ownership.financing, residual_value_percentage: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Tasso Annuo (es. 0.05 per 5%)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="w-full p-2 rounded border border-input bg-background"
+                      value={ownership.financing.interest_rate_annual}
+                      onChange={(e) =>
+                        setOwnership({
+                          ...ownership,
+                          financing: { ...ownership.financing, interest_rate_annual: Number(e.target.value) },
+                        })
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
