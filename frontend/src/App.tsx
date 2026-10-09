@@ -198,10 +198,10 @@ export const App: React.FC = () => {
               <div className="bg-card p-5 rounded-xl border border-border shadow-sm">
                 <span className="text-xs font-medium text-muted-foreground">Costo al Chilometro</span>
                 <div className="flex items-baseline gap-2 mt-1">
-                  <span className="text-xl font-bold text-emerald-600">€ {analysis.candidate_tco.tco_per_km.toFixed(3)}</span>
-                  <span className="text-xs text-muted-foreground line-through">€ {analysis.current_tco.tco_per_km.toFixed(3)}</span>
+                  <span className="text-xl font-bold text-emerald-600">€ {Number(analysis.candidate_tco.tco_per_km).toFixed(3)}</span>
+                  <span className="text-xs text-muted-foreground line-through">€ {Number(analysis.current_tco.tco_per_km).toFixed(3)}</span>
                 </div>
-                <span className="text-xs text-muted-foreground mt-1 block">Risparmio {analysis.break_even.cost_per_km_diff > 0 ? `€ ${analysis.break_even.cost_per_km_diff.toFixed(3)}/km` : 'nessuno'}</span>
+                <span className="text-xs text-muted-foreground mt-1 block">Risparmio {analysis.break_even.cost_per_km_diff > 0 ? `€ ${Number(analysis.break_even.cost_per_km_diff).toFixed(3)}/km` : 'nessuno'}</span>
               </div>
 
               <div className="bg-card p-5 rounded-xl border border-border shadow-sm">

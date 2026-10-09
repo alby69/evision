@@ -16,6 +16,18 @@ from app.domain.models.usage import UsageProfile
 from app.domain.models.vehicle import Vehicle
 
 
+class EVCatalogItem(BaseModel):
+    make: str
+    model: str
+    year_start: int | None = None
+    year: int | None = None
+    battery_capacity: float | None = Field(default=None, description="Gross battery capacity in kWh")
+    battery_useable_capacity: float | None = Field(default=None, description="Usable battery capacity in kWh")
+    electric_range: float | None = Field(default=None, description="Electric range in km (WLTP or estimated)")
+    charge_power_max: float | None = Field(default=None, description="Max charging power in kW")
+    vehicle_consumption: float | None = Field(default=None, description="Average consumption in kWh/100km")
+    estimated_price_eur: float | None = Field(default=None, description="Estimated purchase price in EUR")
+
 class TCORequest(BaseModel):
     vehicle: Vehicle
     usage: UsageProfile

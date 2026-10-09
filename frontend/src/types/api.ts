@@ -16,6 +16,19 @@ export enum FuelType {
   CNG = 'CNG',
 }
 
+export interface EVCatalogItem {
+  make: string;
+  model: string;
+  year_start?: number;
+  year?: number;
+  battery_capacity?: number;
+  battery_useable_capacity?: number;
+  electric_range?: number;
+  charge_power_max?: number;
+  vehicle_consumption?: number;
+  estimated_price_eur?: number;
+}
+
 export enum RecommendationRating {
   STRONG_BUY = 'STRONG_BUY',
   BUY = 'BUY',
