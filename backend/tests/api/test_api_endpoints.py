@@ -9,6 +9,27 @@ def test_health_check():
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
 
+def test_ev_catalog_endpoint():
+    response = client.get("/api/v1/vehicles/catalog")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) > 0
+
+    # Search specifically for Tesla
+    tesla_res = client.get("/api/v1/vehicles/catalog?search=Tesla")
+    assert tesla_res.status_code == 200
+    tesla_data = tesla_res.json()
+    assert len(tesla_data) > 0
+    assert any("Tesla" in item["make"] for item in tesla_data)
+
+    # Filter specifically by make=Renault
+    renault_res = client.get("/api/v1/vehicles/catalog?make=Renault")
+    assert renault_res.status_code == 200
+    renault_data = renault_res.json()
+    assert len(renault_data) > 0
+    assert all("Renault" in item["make"] for item in renault_data)
+
 def test_list_vehicles():
     response = client.get("/api/v1/vehicles")
     assert response.status_code == 200

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Vehicle, UsageProfile, ChargingProfile, OwnershipScenario, VehicleType, FuelType } from '../types/api';
+import { Vehicle, UsageProfile, ChargingProfile, OwnershipScenario, VehicleType, FuelType, EVCatalogItem } from '../types/api';
+import { EVSearchSelect } from './EVSearchSelect';
 
 interface AnalysisWizardProps {
   onRunAnalysis: (payload: {
@@ -92,6 +93,27 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({ onRunAnalysis, i
       usage,
       charging,
       ownership,
+    });
+  };
+
+  const handleCatalogVehicleSelect = (item: EVCatalogItem) => {
+    const usableBatt = item.battery_useable_capacity || item.battery_capacity || candidateVehicle.usable_battery_capacity || 50;
+    const grossBatt = item.battery_capacity || usableBatt;
+    const cons = item.vehicle_consumption || candidateVehicle.extraurban_consumption;
+
+    setCandidateVehicle({
+      ...candidateVehicle,
+      brand: item.make,
+      model: item.model,
+      year: item.year || item.year_start || candidateVehicle.year,
+      purchase_price: item.estimated_price_eur || candidateVehicle.purchase_price,
+      battery_capacity: grossBatt,
+      usable_battery_capacity: usableBatt,
+      wltp_range: item.electric_range || candidateVehicle.wltp_range,
+      charging_dc_power: item.charge_power_max || candidateVehicle.charging_dc_power,
+      urban_consumption: Math.round(cons * 0.9 * 10) / 10,
+      extraurban_consumption: cons,
+      highway_consumption: Math.round(cons * 1.3 * 10) / 10,
     });
   };
 
@@ -214,48 +236,86 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({ onRunAnalysis, i
       {step === 3 && (
         <div className="space-y-4">
           <h3 className="font-semibold text-lg text-primary">Step 3 — Auto Elettrica Candidata</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Marca Candidate</label>
-              <input
-                type="text"
-                className="w-full p-2 rounded border border-input bg-background"
-                value={candidateVehicle.brand}
-                onChange={(e) => setCandidateVehicle({ ...candidateVehicle, brand: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Modello</label>
-              <input
-                type="text"
-                className="w-full p-2 rounded border border-input bg-background"
-                value={candidateVehicle.model}
-                onChange={(e) => setCandidateVehicle({ ...candidateVehicle, model: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Prezzo Acquisto (€)</label>
-              <input
-                type="number"
-                className="w-full p-2 rounded border border-input bg-background"
-                value={candidateVehicle.purchase_price}
-                onChange={(e) => setCandidateVehicle({ ...candidateVehicle, purchase_price: Number(e.target.value) })}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Capacità Batteria (kWh)</label>
-              <input
-                type="number"
-                className="w-full p-2 rounded border border-input bg-background"
-                value={candidateVehicle.usable_battery_capacity}
-                onChange={(e) =>
-                  setCandidateVehicle({
-                    ...candidateVehicle,
-                    battery_capacity: Number(e.target.value),
-                    usable_battery_capacity: Number(e.target.value),
-                  })
-                }
-              />
+
+          {/* Searchable Catalog Selection Component */}
+          <EVSearchSelect onSelectVehicle={handleCatalogVehicleSelect} />
+
+          <div className="border-t border-border pt-3">
+            <p className="text-xs text-muted-foreground mb-3">
+              Oppure modifica manualmente le specifiche del veicolo selezionato:
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Marca Candidate</label>
+                <input
+                  type="text"
+                  className="w-full p-2 rounded border border-input bg-background"
+                  value={candidateVehicle.brand}
+                  onChange={(e) => setCandidateVehicle({ ...candidateVehicle, brand: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Modello</label>
+                <input
+                  type="text"
+                  className="w-full p-2 rounded border border-input bg-background"
+                  value={candidateVehicle.model}
+                  onChange={(e) => setCandidateVehicle({ ...candidateVehicle, model: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Prezzo Acquisto (€)</label>
+                <input
+                  type="number"
+                  className="w-full p-2 rounded border border-input bg-background"
+                  value={candidateVehicle.purchase_price}
+                  onChange={(e) => setCandidateVehicle({ ...candidateVehicle, purchase_price: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Capacità Batteria Utile (kWh)</label>
+                <input
+                  type="number"
+                  className="w-full p-2 rounded border border-input bg-background"
+                  value={candidateVehicle.usable_battery_capacity}
+                  onChange={(e) =>
+                    setCandidateVehicle({
+                      ...candidateVehicle,
+                      battery_capacity: Number(e.target.value),
+                      usable_battery_capacity: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Autonomia WLTP (km)</label>
+                <input
+                  type="number"
+                  className="w-full p-2 rounded border border-input bg-background"
+                  value={candidateVehicle.wltp_range ?? ''}
+                  onChange={(e) =>
+                    setCandidateVehicle({
+                      ...candidateVehicle,
+                      wltp_range: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Consumo Medio Extraurbano (kWh/100km)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  className="w-full p-2 rounded border border-input bg-background"
+                  value={candidateVehicle.extraurban_consumption}
+                  onChange={(e) =>
+                    setCandidateVehicle({
+                      ...candidateVehicle,
+                      extraurban_consumption: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
             </div>
           </div>
         </div>

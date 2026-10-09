@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
 
+    EV_CATALOG_API_KEY: str = ""
+    EV_CATALOG_API_URL: str = "https://api.api-ninjas.com/v1/electricvehicle"
+
     class Config:
         env_file = ".env"
         extra = "ignore"
