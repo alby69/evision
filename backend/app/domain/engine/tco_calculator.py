@@ -1,15 +1,17 @@
-from decimal import Decimal, ROUND_HALF_UP
-from typing import List
-from app.domain.models.enums import VehicleType, FuelType, FinancingType
-from app.domain.models.vehicle import Vehicle
-from app.domain.models.usage import UsageProfile
+from decimal import ROUND_HALF_UP, Decimal
+
 from app.domain.models.charging import ChargingProfile, FuelProfile
+from app.domain.models.enums import FinancingType, FuelType
 from app.domain.models.ownership import OwnershipScenario
 from app.domain.models.results import VehicleTCOResult, YearlyCostBreakdown
+from app.domain.models.usage import UsageProfile
+from app.domain.models.vehicle import Vehicle
+
 
 def _round_dec(val: Decimal, places: int = 2) -> Decimal:
     fmt = "0." + "0" * places if places > 0 else "0"
     return val.quantize(Decimal(fmt), rounding=ROUND_HALF_UP)
+
 
 def calculate_vehicle_tco(
     vehicle: Vehicle,
@@ -50,7 +52,7 @@ def calculate_vehicle_tco(
         usage.highway_percentage * vehicle.highway_consumption
     )
 
-    yearly_breakdowns: List[YearlyCostBreakdown] = []
+    yearly_breakdowns: list[YearlyCostBreakdown] = []
     cumulative_running = Decimal(0)
 
     total_energy_fuel = Decimal(0)
