@@ -40,5 +40,11 @@ def test_full_analysis_creation():
     response = client.post("/api/v1/analyses", json=payload)
     assert response.status_code == 201
     data = response.json()
-    assert data["id"].startswith("analysis-")
+    analysis_id = data["id"]
+    assert analysis_id.startswith("analysis-")
     assert data["title"] == "Custom Test Analysis"
+
+    # Test retrieval of saved analysis
+    get_res = client.get(f"/api/v1/analyses/{analysis_id}")
+    assert get_res.status_code == 200
+    assert get_res.json()["title"] == "Custom Test Analysis"

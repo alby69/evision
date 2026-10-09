@@ -117,6 +117,24 @@ def test_tco_calculation_ev(candidate_zoe_ev, usage_25k, standard_charging, stan
     assert tco_res.total_energy_fuel_cost > Decimal(0)
     assert tco_res.net_purchase_cost == Decimal(7900)  # 12900 - 5000 trade in
 
+def test_tco_calculation_leasing(candidate_zoe_ev, usage_25k, standard_charging, standard_fuel):
+    leasing_ownership = OwnershipScenario(
+        horizon_years=3,
+        trade_in_value=Decimal(2000),
+        incentive_amount=Decimal(1000),
+        financing=FinancingProfile(
+            financing_type=FinancingType.LEASING,
+            down_payment=Decimal(1500),
+            lease_monthly_fee=Decimal(250),
+            duration_months=36,
+            residual_value_percentage=40.0,
+        ),
+    )
+    tco_res = calculate_vehicle_tco(candidate_zoe_ev, usage_25k, standard_charging, standard_fuel, leasing_ownership)
+    assert tco_res.horizon_years == 3
+    assert tco_res.total_tco > Decimal(0)
+    assert tco_res.total_financing_interest >= Decimal(0)
+
 def test_break_even_calculation(current_diesel_car, candidate_zoe_ev, usage_25k, standard_charging, standard_fuel, ownership_5yr):
     curr_tco = calculate_vehicle_tco(current_diesel_car, usage_25k, standard_charging, standard_fuel, ownership_5yr)
     cand_tco = calculate_vehicle_tco(candidate_zoe_ev, usage_25k, standard_charging, standard_fuel, ownership_5yr)

@@ -31,19 +31,43 @@ def calculate_vehicle_tco(
     financing = ownership.financing
     annual_interest_payment = Decimal(0)
 
+    # Determine balloon payment / residual value option if percentage is provided
+    balloon = financing.final_balloon_payment
+    if (
+        financing.residual_value_percentage is not None
+        and financing.residual_value_percentage > 0
+        and balloon == Decimal(0)
+    ):
+        balloon = gross_price * Decimal(str(financing.residual_value_percentage / 100.0))
+
     if financing.financing_type in (FinancingType.LOAN, FinancingType.FINANCING, FinancingType.LEASING):
-        principal = financing.financed_amount if financing.financed_amount > 0 else net_purchase_cost - financing.down_payment
-        if principal > 0 and financing.duration_months > 0:
-            rate = Decimal(str(financing.interest_rate_annual)) / Decimal(12)
-            n_months = financing.duration_months
-            if rate > 0:
-                monthly = (principal * rate * ((1 + rate) ** n_months)) / (((1 + rate) ** n_months) - 1)
-                total_financed_payments = monthly * n_months + financing.final_balloon_payment
-                total_interest = total_financed_payments - principal
-                annual_interest_payment = total_interest / Decimal(ownership.horizon_years)
-            else:
-                total_interest = Decimal(0)
-                annual_interest_payment = Decimal(0)
+        if (
+            financing.financing_type == FinancingType.LEASING
+            and financing.lease_monthly_fee is not None
+            and financing.lease_monthly_fee > Decimal(0)
+        ):
+            monthly_payment = financing.lease_monthly_fee
+            total_lease_payments = monthly_payment * Decimal(financing.duration_months) + balloon
+            base_amount = net_purchase_cost - financing.down_payment
+            total_interest = max(Decimal(0), total_lease_payments - base_amount)
+            annual_interest_payment = total_interest / Decimal(ownership.horizon_years)
+        else:
+            principal = (
+                financing.financed_amount
+                if financing.financed_amount > 0
+                else max(Decimal(0), net_purchase_cost - financing.down_payment - balloon)
+            )
+            if principal > 0 and financing.duration_months > 0:
+                rate = Decimal(str(financing.interest_rate_annual)) / Decimal(12)
+                n_months = financing.duration_months
+                if rate > 0:
+                    monthly = (principal * rate * ((1 + rate) ** n_months)) / (((1 + rate) ** n_months) - 1)
+                    total_financed_payments = monthly * Decimal(n_months) + balloon
+                    total_interest = max(Decimal(0), total_financed_payments - (principal + balloon))
+                    annual_interest_payment = total_interest / Decimal(ownership.horizon_years)
+                else:
+                    total_interest = Decimal(0)
+                    annual_interest_payment = Decimal(0)
 
     # 3. Energy / Fuel Cost per year calculation
     weighted_consumption = (

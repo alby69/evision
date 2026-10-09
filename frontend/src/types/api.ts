@@ -81,6 +81,8 @@ export interface FinancingProfile {
   interest_rate_annual: number;
   duration_months: number;
   final_balloon_payment: number;
+  residual_value_percentage?: number;
+  lease_monthly_fee?: number;
 }
 
 export interface OwnershipScenario {
