@@ -57,28 +57,25 @@ const splitSum = (...values: number[]) => values.reduce((acc, v) => acc + v, 0);
 const isFull = (sumDec: number) => Math.abs(sumDec - 1) < 0.005;
 
 const autoFillThird = (
-  city: number,
-  extraurban: number,
-  highway: number,
+  origCity: number,
+  origExtraurban: number,
+  origHighway: number,
   changedField: 'city' | 'extraurban' | 'highway',
   newValue: number
 ): { city: number; extraurban: number; highway: number } => {
-  const values = { city, extraurban, highway };
+  const values = { city: origCity, extraurban: origExtraurban, highway: origHighway };
   values[changedField] = newValue;
-  const nonZeroKeys = (Object.keys(values) as Array<keyof typeof values>).filter(
-    (k) => values[k] > 0
-  );
-  if (nonZeroKeys.length === 2) {
-    const [a, b] = nonZeroKeys;
-    const sum = values[a] + values[b];
+
+  const keys: Array<keyof typeof values> = ['city', 'extraurban', 'highway'];
+  const origNonZero = keys.filter((k) => (k === changedField ? newValue : values[k]) > 0);
+  // Auto-fill only if user is filling a previously empty field and exactly 1 other was > 0
+  if (origNonZero.length === 2 && newValue > 0) {
+    const sum = values[origNonZero[0]] + values[origNonZero[1]];
     if (sum < 1) {
-      const thirdMap: Record<'city' | 'extraurban' | 'highway', 'city' | 'extraurban' | 'highway'> = {
-        city: 'extraurban',
-        extraurban: 'highway',
-        highway: 'city',
-      };
-      const third = thirdMap[changedField];
-      values[third] = 1 - sum;
+      const zeroKey = keys.find((k) => values[k] === 0);
+      if (zeroKey) {
+        values[zeroKey] = 1 - sum;
+      }
     }
   }
   return values;
