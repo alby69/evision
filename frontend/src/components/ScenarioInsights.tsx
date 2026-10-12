@@ -8,30 +8,6 @@ interface ScenarioInsightsProps {
   analysis: FullAnalysisResponse;
 }
 
-const sensitivityLabels: Record<string, string> = {
-  'Annual Mileage': 'Chilometraggio annuo',
-  'Fuel Prices': 'Prezzo dei carburanti',
-  'Home Electricity Tariff': 'Tariffa elettrica domestica',
-  'Vehicle Purchase Price': 'Prezzo di acquisto',
-  'EV Depreciation Rate': 'Deprezzamento dell’EV',
-  'Routine Maintenance Savings': 'Risparmio sulla manutenzione',
-};
-
-const sensitivityDescriptions: Record<string, string> = {
-  'Annual Mileage':
-    'Impatto massimo: il risparmio di energia/carburante cresce in modo proporzionale ai chilometri percorsi.',
-  'Fuel Prices':
-    'Impatto alto: un prezzo più elevato di benzina e diesel aumenta direttamente il risparmio passando all’elettrico.',
-  'Home Electricity Tariff':
-    'Impatto alto: ricaricare a casa a tariffe basse (0,20-0,25 €/kWh) massimizza il risparmio operativo.',
-  'Vehicle Purchase Price':
-    'Impatto medio: il prezzo di acquisto determina la lunghezza del tempo di rientro.',
-  'EV Depreciation Rate':
-    'Impatto moderato: il valore residuo al termine del periodo incide sul costo totale finale.',
-  'Routine Maintenance Savings':
-    'Impatto minore: la minore manutenzione dell’EV garantisce un risparmio costante ma contenuto.',
-};
-
 interface ScenarioCardConfig {
   label: string;
   caption: string;
@@ -138,7 +114,7 @@ export const ScenarioInsights: React.FC<ScenarioInsightsProps> = ({ analysis }) 
               <li key={factor.parameter_name}>
                 <div className="flex items-center justify-between gap-3 text-sm">
                   <span className="font-semibold text-foreground">
-                    {sensitivityLabels[factor.parameter_name] ?? factor.parameter_name}
+                    {factor.parameter_name}
                   </span>
                   <span className="shrink-0 text-xs font-bold tabular-nums text-muted-foreground">
                     {score.toFixed(1)}/10
@@ -151,7 +127,7 @@ export const ScenarioInsights: React.FC<ScenarioInsightsProps> = ({ analysis }) 
                   />
                 </div>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  {sensitivityDescriptions[factor.parameter_name] ?? factor.impact_description}
+                  {factor.impact_description}
                 </p>
               </li>
             );

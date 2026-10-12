@@ -16,14 +16,24 @@ from app.domain.models.vehicle import Vehicle
 
 
 def _format_duration(years: float) -> str:
+    """Formats a duration in years as years + months, e.g.
+    1.6 -> "1 anno e 7 mesi"; 0.5 -> "6 mesi"; 2.0 -> "2 anni".
+    """
     total_months = round(years * 12)
     if total_months < 12:
-        return f"{total_months} month{'s' if total_months != 1 else ''}"
+        return f"{total_months} {'mese' if total_months == 1 else 'mesi'}"
     whole_years, months = divmod(total_months, 12)
-    years_part = f"{whole_years} year{'s' if whole_years != 1 else ''}"
+    years_part = f"{whole_years} {'anno' if whole_years == 1 else 'anni'}"
     if months == 0:
         return years_part
-    return f"{years_part} and {months} month{'s' if months != 1 else ''}"
+    return f"{years_part} e {months} {'mese' if months == 1 else 'mesi'}"
+
+
+def _format_eur(value, decimals: int = 2) -> str:
+    """Formats a euro amount with Italian conventions: 7941.95 -> '€7.941,95'."""
+    sign = "-" if value < 0 else ""
+    body = f"{abs(value):,.{decimals}f}".replace(",", "\x00").replace(".", ",").replace("\x00", ".")
+    return f"{sign}€{body}"
 
 
 def generate_decision_recommendation(
@@ -52,58 +62,66 @@ def generate_decision_recommendation(
     # 1. Financial Investment Risk
     if candidate_tco.net_purchase_cost > Decimal(30000):
         risk_score += 20
-        cautions.append("Significant upfront initial capital required.")
+        cautions.append("Richiede un esborso iniziale significativo.")
     elif candidate_tco.net_purchase_cost > Decimal(18000):
         risk_score += 10
 
     # 2. Charging Access Risk
     if charging.home_charging_percentage < 0.50:
         risk_score += 25
-        cautions.append("High reliance on public AC/DC fast charging increases energy cost.")
+        cautions.append("Molto ricorso alla ricarica pubblica AC/DC: il costo dell’energia sale.")
     else:
-        key_advantages.append(f"High home charging ratio ({int(charging.home_charging_percentage * 100)}%) drastically reduces cost per km.")
+        key_advantages.append(
+            f"Alta quota di ricarica a casa ({int(charging.home_charging_percentage * 100)}%): "
+            f"riduce drasticamente il costo per km."
+        )
 
     # 3. Mileage Advantage
     if usage.annual_km >= 20000:
-        key_advantages.append(f"High annual mileage ({int(usage.annual_km):,} km/year) accelerates financial break-even.".replace(",", "."))
+        key_advantages.append(
+            f"Percorrenza annua elevata ({int(usage.annual_km):,} km/anno): accorcia il tempo di rientro.".replace(",", ".")
+        )
     elif usage.annual_km < 10000:
-        cautions.append("Low annual mileage delays financial break-even.")
+        cautions.append("Percorrenza annua bassa: allunga il tempo di rientro.")
 
     # 4. Highway Range Risk
     if range_res.winter_highway_range_km < 200:
         risk_score += 15
-        cautions.append(f"Limited winter highway range ({range_res.winter_highway_range_km:.0f} km) requires planning on long trips.")
+        cautions.append(
+            f"Autonomia invernale in autostrada limitata ({range_res.winter_highway_range_km:.0f} km): "
+            f"richiede pianificazione nei viaggi lunghi."
+        )
 
     # Determine Rating
     confidence = 0.85
     if savings > Decimal(4000) and (op_be_years is not None and op_be_years <= horizon * 0.75):
         rating = RecommendationRating.STRONG_BUY
         summary = (
-            f"Strongly recommended! Replacing {current_vehicle.brand} {current_vehicle.model} with "
-            f"{candidate_vehicle.brand} {candidate_vehicle.model} is projected to save €{savings:,.2f} over {horizon} years. "
-            f"Break-even occurs in about {_format_duration(op_be_years)}."
+            f"Fortemente consigliato! Sostituire {current_vehicle.brand} {current_vehicle.model} con "
+            f"{candidate_vehicle.brand} {candidate_vehicle.model} dovrebbe far risparmiare {_format_eur(savings)} "
+            f"in {horizon} anni. Il break-even si raggiunge in circa {_format_duration(op_be_years)}."
         )
     elif savings > Decimal(1000) and (op_be_years is not None and op_be_years <= horizon):
         rating = RecommendationRating.BUY
         summary = (
-            f"Financially advantageous decision. Switching saves approx €{savings:,.2f} over {horizon} years, "
-            f"with break-even reached in about {_format_duration(op_be_years)}."
+            f"Decisione finanziariamente vantaggiosa. Il passaggio fa risparmiare circa {_format_eur(savings)} "
+            f"in {horizon} anni, con break-even raggiunto in circa {_format_duration(op_be_years)}."
         )
     elif savings >= Decimal(-1000) and savings <= Decimal(1000):
         rating = RecommendationRating.MAYBE
         summary = (
-            f"Economically neutral decision. Total costs over {horizon} years are nearly equivalent "
-            f"(difference of €{savings:,.2f}). Decision depends on personal preference for EV driving experience."
+            f"Decisione economicamente neutra. I costi totali in {horizon} anni sono quasi equivalenti "
+            f"(differenza di {_format_eur(savings)}). La scelta dipende dalle preferenze personali di guida."
         )
     elif savings < Decimal(-1000) and candidate_tco.net_purchase_cost > current_tco.net_purchase_cost:
         rating = RecommendationRating.KEEP_CURRENT
         summary = (
-            f"Financially better to keep current {current_vehicle.brand} {current_vehicle.model}. "
-            f"The candidate EV incurs €{abs(savings):,.2f} higher total costs over the {horizon}-year period."
+            f"Dal punto di vista finanziario conviene mantenere l’attuale {current_vehicle.brand} {current_vehicle.model}. "
+            f"L’EV candidata comporta costi totali superiori di {_format_eur(abs(savings))} nel periodo di {horizon} anni."
         )
     else:
         rating = RecommendationRating.AVOID
-        summary = "Switching to this candidate vehicle is economically disadvantageous under current usage profile."
+        summary = "Passare a questo veicolo candidato è economicamente svantaggioso con l’attuale profilo di utilizzo."
 
     risk_score = min(100, max(0, risk_score))
     risk_lvl = RiskLevel.LOW if risk_score < 30 else (RiskLevel.MEDIUM if risk_score < 60 else RiskLevel.HIGH)
@@ -111,18 +129,18 @@ def generate_decision_recommendation(
     # Explanations
     explanations.append(
         ValueExplanation(
-            value=f"€{candidate_tco.tco_per_km:.4f} / km",
-            formula="Candidate Total TCO / Total Kilometers driven",
+            value=f"{_format_eur(candidate_tco.tco_per_km, 4)} / km",
+            formula="TCO totale candidato / Km totali percorsi",
             source=ValueSource.FACT,
-            notes=f"Compared to €{current_tco.tco_per_km:.4f} / km for current car."
+            notes=f"Costo al chilometro · rispetto a {_format_eur(current_tco.tco_per_km, 4)} / km dell’auto attuale.",
         )
     )
     explanations.append(
         ValueExplanation(
             value=f"{range_res.mixed_range_km:.0f} km",
-            formula="Usable battery kWh / Weighted consumption * 100",
+            formula="Batteria utile kWh / Consumo ponderato * 100",
             source=ValueSource.ESTIMATE,
-            notes="Real world estimated range under mixed usage profile."
+            notes="Autonomia reale stimata · profilo di guida misto.",
         )
     )
 

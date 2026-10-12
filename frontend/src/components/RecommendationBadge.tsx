@@ -20,7 +20,7 @@ interface BadgeConfig {
 const badgeConfig: Record<RecommendationRating, BadgeConfig> = {
   [RecommendationRating.STRONG_BUY]: {
     label: 'Conviene molto',
-    tag: 'Strong buy',
+    tag: 'Acquisto forte',
     description:
       'Risparmio finanziario significativo e break-even rapido: l’upgrade all’elettrico è solido su quasi tutti gli scenari.',
     icon: <TrendingUp className="h-5 w-5" />,
@@ -29,7 +29,7 @@ const badgeConfig: Record<RecommendationRating, BadgeConfig> = {
   },
   [RecommendationRating.BUY]: {
     label: 'Conviene',
-    tag: 'Buy',
+    tag: 'Acquisto conveniente',
     description:
       'Convenienza economica confermata nell’orizzonte di possesso considerato, con margine positivo attendibile.',
     icon: <ThumbsUp className="h-5 w-5" />,
@@ -38,7 +38,7 @@ const badgeConfig: Record<RecommendationRating, BadgeConfig> = {
   },
   [RecommendationRating.MAYBE]: {
     label: 'Neutro',
-    tag: 'Maybe',
+    tag: 'Da valutare',
     description:
       'I costi totali sono sostanzialmente equivalenti: la scelta dipende da priorità personali non monetarie.',
     icon: <Minus className="h-5 w-5" />,
@@ -47,7 +47,7 @@ const badgeConfig: Record<RecommendationRating, BadgeConfig> = {
   },
   [RecommendationRating.KEEP_CURRENT]: {
     label: 'Tieni l’auto attuale',
-    tag: 'Keep current',
+    tag: 'Mantieni l’attuale',
     description:
       'In termini economici puri conviene continuare a usare il veicolo attuale per ora.',
     icon: <RotateCcw className="h-5 w-5" />,
@@ -56,7 +56,7 @@ const badgeConfig: Record<RecommendationRating, BadgeConfig> = {
   },
   [RecommendationRating.AVOID]: {
     label: 'Non conviene',
-    tag: 'Avoid',
+    tag: 'Sconsigliato',
     description:
       'L’acquisto del veicolo candidato comporta costi totali nettamente superiori rispetto all’alternativa.',
     icon: <TrendingDown className="h-5 w-5" />,

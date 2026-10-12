@@ -729,7 +729,15 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
                         onChange={(e) => setCandidateVehicle({ ...candidateVehicle, model: e.target.value })}
                       />
                     </Field>
-                    <Field label="Prezzo di acquisto (€) *" htmlFor="ev-price">
+                    <Field
+                      label="Prezzo di listino (€) *"
+                      htmlFor="ev-price"
+                      hint={
+                        catalogPriceUnknown
+                          ? undefined
+                          : 'Prezzo di listino «chiavi in mano»: modificalo per riflettere eventuali sconti o promozioni.'
+                      }
+                    >
                       <NumberInput
                         id="ev-price"
                         min={0}
@@ -743,8 +751,8 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
                       />
                       {catalogPriceUnknown && (
                         <p className="mt-1 text-[11px] leading-relaxed text-amber-700 dark:text-amber-400">
-                          Prezzo non disponibile per questo modello: inserisci il prezzo reale «chiavi in mano»
-                          (incentivi e permuta vengono calcolati dal motore, non vanno sottratti qui).
+                          Nessun prezzo di listino disponibile per questo modello nel catalogo: inseriscilo tu.
+                          Incentivi e permuta vengono calcolati dal motore e non vanno sottratti qui.
                         </p>
                       )}
                     </Field>

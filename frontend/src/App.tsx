@@ -50,6 +50,12 @@ const sourceLabels: Record<ValueExplanation['source'], string> = {
   ASSUMPTION: 'Assunzione',
 };
 
+const riskLabels: Record<'LOW' | 'MEDIUM' | 'HIGH', string> = {
+  LOW: 'Basso',
+  MEDIUM: 'Medio',
+  HIGH: 'Alto',
+};
+
 export const App: React.FC = () => {
   const [analysis, setAnalysis] = useState<FullAnalysisResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -184,7 +190,7 @@ export const App: React.FC = () => {
               <Zap className="h-5 w-5" />
             </span>
             <div className="leading-tight">
-              <h1 className="text-sm font-extrabold tracking-tight sm:text-base">EV Purchase Advisor</h1>
+              <h1 className="text-sm font-extrabold tracking-tight sm:text-base">Consulente EV</h1>
               <p className="hidden text-[11px] text-muted-foreground sm:block">
                 Conviene davvero passare all’elettrico?
               </p>
@@ -371,7 +377,7 @@ export const App: React.FC = () => {
                   <span className="flex items-baseline gap-2">
                     {analysis.recommendation.risk_score}
                     <span className="text-sm font-medium text-muted-foreground">
-                      /100 · {analysis.recommendation.risk_level}
+                      /100 · {riskLabels[analysis.recommendation.risk_level]}
                     </span>
                   </span>
                 }
@@ -436,9 +442,6 @@ export const App: React.FC = () => {
                 {(Object.keys(sourceLabels) as ValueExplanation['source'][]).map((key) => (
                   <Chip key={key} tone={sourceTone[key]}>
                     {sourceLabels[key]}
-                    <span className="hidden font-mono text-[10px] sm:inline">
-                      · {key.replace('_', ' ')}
-                    </span>
                   </Chip>
                 ))}
               </div>
@@ -479,7 +482,7 @@ export const App: React.FC = () => {
             <footer className="border-t border-border/70 py-8 text-center text-xs leading-relaxed text-muted-foreground print:hidden">
               <p className="flex items-center justify-center gap-1.5 font-semibold text-foreground">
                 <Zap className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                EV Purchase Advisor
+                Consulente EV
                 <InfoHint text="Motore di calcolo open source: i valori dipendono da costi, prezzi e percorrenze che inserisci." />
               </p>
               <p className="mx-auto mt-1.5 max-w-2xl">

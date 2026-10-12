@@ -75,34 +75,34 @@ def calculate_sensitivity_factors(
     # Evaluate parameters impact on TCO difference
     factors = [
         SensitivityFactor(
-            parameter_name="Annual Mileage",
+            parameter_name="Chilometraggio annuo",
             impact_score=9.2,
-            impact_description="Highest impact: Operating fuel/energy cost savings scale directly with annual kilometers."
+            impact_description="Impatto massimo: il risparmio di energia/carburante cresce in modo proporzionale ai chilometri percorsi."
         ),
         SensitivityFactor(
-            parameter_name="Fuel Prices",
+            parameter_name="Prezzo dei carburanti",
             impact_score=8.5,
-            impact_description="High impact: Higher ICE fuel prices directly increase savings when switching to electric."
+            impact_description="Impatto alto: un prezzo più elevato di benzina e diesel aumenta direttamente il risparmio passando all’elettrico."
         ),
         SensitivityFactor(
-            parameter_name="Home Electricity Tariff",
+            parameter_name="Tariffa elettrica domestica",
             impact_score=7.8,
-            impact_description="High impact: Access to low-cost home charging (€0.20-0.25/kWh) maximizes operational savings."
+            impact_description="Impatto alto: ricaricare a casa a tariffe basse (0,20-0,25 €/kWh) massimizza il risparmio operativo."
         ),
         SensitivityFactor(
-            parameter_name="Vehicle Purchase Price",
+            parameter_name="Prezzo di acquisto",
             impact_score=6.5,
-            impact_description="Medium impact: Upfront acquisition price determines break-even timeline length."
+            impact_description="Impatto medio: il prezzo di acquisto determina la lunghezza del tempo di rientro."
         ),
         SensitivityFactor(
-            parameter_name="EV Depreciation Rate",
+            parameter_name="Deprezzamento dell’EV",
             impact_score=5.0,
-            impact_description="Moderate impact: Resale value after ownership period affects final total cost."
+            impact_description="Impatto moderato: il valore residuo al termine del periodo incide sul costo totale finale."
         ),
         SensitivityFactor(
-            parameter_name="Routine Maintenance Savings",
+            parameter_name="Risparmio sulla manutenzione",
             impact_score=3.5,
-            impact_description="Lower impact: EV maintenance savings (no oil changes, less brake wear) provide steady small savings."
+            impact_description="Impatto minore: la minore manutenzione dell’EV garantisce un risparmio costante ma contenuto."
         ),
     ]
 

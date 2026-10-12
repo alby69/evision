@@ -29,7 +29,7 @@ export async function searchEVCatalog(query?: {
   const queryString = params.toString();
   const url = `${API_BASE}/vehicles/catalog${queryString ? `?${queryString}` : ''}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error('Failed to fetch vehicle catalog');
+  if (!res.ok) throw new Error('Impossibile caricare il catalogo veicoli.');
   return res.json();
 }
 
@@ -58,7 +58,7 @@ export async function fetchCarFacets(
   if (query?.year) params.append('year', query.year.toString());
 
   const res = await fetch(`${API_BASE}/vehicles/car-facets?${params.toString()}`);
-  if (!res.ok) throw new Error('Failed to fetch car facets');
+  if (!res.ok) throw new Error('Impossibile caricare i filtri del catalogo auto.');
   return res.json();
 }
 
@@ -75,7 +75,7 @@ export async function searchCars(query: {
   if (query.fuel_type) params.append('fuel_type', query.fuel_type);
 
   const res = await fetch(`${API_BASE}/vehicles/cars?${params.toString()}`);
-  if (!res.ok) throw new Error('Failed to fetch car catalog');
+  if (!res.ok) throw new Error('Impossibile caricare il catalogo auto.');
   return res.json();
 }
 
@@ -102,19 +102,19 @@ export async function estimateVehicleValue(
 
 export async function fetchDemoVehicles(): Promise<Vehicle[]> {
   const res = await fetch(`${API_BASE}/vehicles`);
-  if (!res.ok) throw new Error('Failed to fetch vehicles');
+  if (!res.ok) throw new Error('Impossibile caricare i veicoli di esempio.');
   return res.json();
 }
 
 export async function fetchDemoAnalysis(): Promise<FullAnalysisResponse> {
   const res = await fetch(`${API_BASE}/analyses/demo`);
-  if (!res.ok) throw new Error('Failed to fetch demo analysis');
+  if (!res.ok) throw new Error('Impossibile caricare l’analisi dimostrativa.');
   return res.json();
 }
 
 export async function fetchAnalysisById(id: string): Promise<FullAnalysisResponse> {
   const res = await fetch(`${API_BASE}/analyses/${id}`);
-  if (!res.ok) throw new Error('Failed to fetch analysis');
+  if (!res.ok) throw new Error('Impossibile caricare l’analisi.');
   return res.json();
 }
 
@@ -124,6 +124,6 @@ export async function createAnalysis(payload: unknown): Promise<FullAnalysisResp
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error('Failed to compute analysis');
+  if (!res.ok) throw new Error('Impossibile calcolare l’analisi. Controlla i dati inseriti.');
   return res.json();
 }

@@ -263,8 +263,8 @@ async def search_ev_catalog(
                 for raw in data:
                     if isinstance(raw, dict):
                         item = EVCatalogItem(
-                            make=str(raw.get("make") or "Unknown"),
-                            model=str(raw.get("model") or "EV Model"),
+                            make=str(raw.get("make") or "Sconosciuta"),
+                            model=str(raw.get("model") or "Modello EV"),
                             year_start=_parse_int(raw.get("year_start") or raw.get("year")),
                             year=_parse_int(raw.get("year")),
                             battery_capacity=_parse_number(raw.get("battery_capacity")),

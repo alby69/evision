@@ -174,11 +174,11 @@ def test_range_and_battery_degradation(candidate_zoe_ev, usage_25k):
     assert deg_res.yearly_capacities_kwh[5] < deg_res.initial_capacity_kwh
 
 def test_format_duration_years_and_months():
-    assert _format_duration(1.6) == "1 year and 7 months"
-    assert _format_duration(1.0) == "1 year"
-    assert _format_duration(2.0) == "2 years"
-    assert _format_duration(0.5) == "6 months"
-    assert _format_duration(1.1) == "1 year and 1 month"
+    assert _format_duration(1.6) == "1 anno e 7 mesi"
+    assert _format_duration(1.0) == "1 anno"
+    assert _format_duration(2.0) == "2 anni"
+    assert _format_duration(0.5) == "6 mesi"
+    assert _format_duration(1.1) == "1 anno e 1 mese"
 
 
 def test_scenarios_and_recommendation(current_diesel_car, candidate_zoe_ev, usage_25k, standard_charging, standard_fuel, ownership_5yr):
