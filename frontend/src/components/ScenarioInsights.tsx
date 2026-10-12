@@ -2,7 +2,7 @@ import React from 'react';
 import { FullAnalysisResponse } from '../types/api';
 import { Card, SectionHeader } from './ui';
 import { TrendingUp, TrendingDown, Minus, Crosshair } from 'lucide-react';
-import { fmtEUR, fmtSignedEUR, fmtYears } from '../utils/format';
+import { fmtDuration, fmtEUR, fmtSignedEUR } from '../utils/format';
 
 interface ScenarioInsightsProps {
   analysis: FullAnalysisResponse;
@@ -100,7 +100,7 @@ export const ScenarioInsights: React.FC<ScenarioInsightsProps> = ({ analysis }) 
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-muted-foreground">Break-even</span>
                     <span className="font-bold tabular-nums text-foreground">
-                      {scenario.breakEven != null ? fmtYears(scenario.breakEven) : 'Mai'}
+                      {scenario.breakEven != null ? fmtDuration(scenario.breakEven) : 'Mai'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2">

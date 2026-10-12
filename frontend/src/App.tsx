@@ -26,7 +26,7 @@ import {
   Route,
   Plug,
 } from 'lucide-react';
-import { fmtEUR, fmtNum, fmtPct, fmtSignedEUR, fmtYears } from './utils/format';
+import { fmtDuration, fmtEUR, fmtNum, fmtPct, fmtSignedEUR } from './utils/format';
 
 type AnalysisSource = 'demo' | 'saved' | 'custom';
 
@@ -307,7 +307,7 @@ export const App: React.FC = () => {
             {/* Key metrics */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <StatCard
-                label="Risparmio cumulativo"
+                label="Risparmio totale (TCO)"
                 tone={Number(analysis.break_even.cumulative_savings_over_horizon) >= 0 ? 'emerald' : 'rose'}
                 icon={<TrendingUp className="h-4 w-4" />}
                 value={
@@ -321,7 +321,7 @@ export const App: React.FC = () => {
                     {fmtSignedEUR(analysis.break_even.cumulative_savings_over_horizon)}
                   </span>
                 }
-                sub={`Rispetto a tenere l’auto attuale per ${analysis.ownership.horizon_years} anni`}
+                sub={`Rispetto a tenere l’auto attuale per ${analysis.ownership.horizon_years} anni · acquisto e valore residuo inclusi`}
               />
 
               <StatCard
@@ -330,7 +330,7 @@ export const App: React.FC = () => {
                 icon={<Timer className="h-4 w-4" />}
                 value={
                   analysis.break_even.operational_break_even_years != null
-                    ? fmtYears(analysis.break_even.operational_break_even_years)
+                    ? fmtDuration(analysis.break_even.operational_break_even_years)
                     : 'Non raggiunto'
                 }
                 sub={

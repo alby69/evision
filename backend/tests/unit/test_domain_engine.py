@@ -7,7 +7,10 @@ from app.domain.engine.range_calculator import (
     calculate_battery_degradation,
     calculate_real_world_range,
 )
-from app.domain.engine.recommendation_engine import generate_decision_recommendation
+from app.domain.engine.recommendation_engine import (
+    _format_duration,
+    generate_decision_recommendation,
+)
 from app.domain.engine.scenarios_calculator import calculate_sensitivity_factors, simulate_scenarios
 from app.domain.engine.tco_calculator import calculate_vehicle_tco
 from app.domain.models.charging import ChargingProfile, FuelProfile
@@ -169,6 +172,14 @@ def test_range_and_battery_degradation(candidate_zoe_ev, usage_25k):
     deg_res = calculate_battery_degradation(candidate_zoe_ev, usage_25k, 5)
     assert deg_res.initial_capacity_kwh == 52.0
     assert deg_res.yearly_capacities_kwh[5] < deg_res.initial_capacity_kwh
+
+def test_format_duration_years_and_months():
+    assert _format_duration(1.6) == "1 year and 7 months"
+    assert _format_duration(1.0) == "1 year"
+    assert _format_duration(2.0) == "2 years"
+    assert _format_duration(0.5) == "6 months"
+    assert _format_duration(1.1) == "1 year and 1 month"
+
 
 def test_scenarios_and_recommendation(current_diesel_car, candidate_zoe_ev, usage_25k, standard_charging, standard_fuel, ownership_5yr):
     scenarios = simulate_scenarios(current_diesel_car, candidate_zoe_ev, usage_25k, standard_charging, standard_fuel, ownership_5yr)

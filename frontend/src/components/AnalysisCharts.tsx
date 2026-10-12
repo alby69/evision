@@ -123,20 +123,20 @@ export const AnalysisCharts: React.FC<ChartsProps> = ({ analysis }) => {
 
   return (
     <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-      {/* Cumulative TCO */}
+      {/* Cumulative operating costs */}
       <Card className="p-5">
         <SectionHeader
           icon={<LineChartIcon className="h-4 w-4" />}
-          title="TCO cumulativo"
+          title="Costi operativi cumulativi"
           subtitle={
             Math.abs(finalDelta) < 1
-              ? 'Costi totali sostanzialmente equivalenti al termine del periodo.'
+              ? 'Costi operativi sostanzialmente equivalenti al termine del periodo (esclusi acquisto e valore residuo).'
               : finalDelta > 0
-                ? `Al termine del periodo: ${fmtEUR(finalDelta)} in meno con l’elettrico.`
-                : `Al termine del periodo: ${fmtEUR(-finalDelta)} in più con l’elettrico.`
+                ? `${fmtEUR(finalDelta)} in meno di costi operativi con l’elettrico al termine del periodo (esclusi acquisto e valore residuo).`
+                : `${fmtEUR(-finalDelta)} in più di costi operativi con l’elettrico al termine del periodo (esclusi acquisto e valore residuo).`
           }
         />
-        <div className="h-64" role="img" aria-label="Grafico dell'andamento del costo totale di possesso cumulativo">
+        <div className="h-64" role="img" aria-label="Grafico dell'andamento dei costi operativi cumulativi">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={tcoCurveData} margin={{ top: 4, right: 8, left: 4, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />

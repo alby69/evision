@@ -15,6 +15,17 @@ from app.domain.models.usage import UsageProfile
 from app.domain.models.vehicle import Vehicle
 
 
+def _format_duration(years: float) -> str:
+    total_months = round(years * 12)
+    if total_months < 12:
+        return f"{total_months} month{'s' if total_months != 1 else ''}"
+    whole_years, months = divmod(total_months, 12)
+    years_part = f"{whole_years} year{'s' if whole_years != 1 else ''}"
+    if months == 0:
+        return years_part
+    return f"{years_part} and {months} month{'s' if months != 1 else ''}"
+
+
 def generate_decision_recommendation(
     current_vehicle: Vehicle,
     candidate_vehicle: Vehicle,
@@ -70,13 +81,13 @@ def generate_decision_recommendation(
         summary = (
             f"Strongly recommended! Replacing {current_vehicle.brand} {current_vehicle.model} with "
             f"{candidate_vehicle.brand} {candidate_vehicle.model} is projected to save €{savings:,.2f} over {horizon} years. "
-            f"Break-even occurs in approx {op_be_years:.1f} years."
+            f"Break-even occurs in about {_format_duration(op_be_years)}."
         )
     elif savings > Decimal(1000) and (op_be_years is not None and op_be_years <= horizon):
         rating = RecommendationRating.BUY
         summary = (
             f"Financially advantageous decision. Switching saves approx €{savings:,.2f} over {horizon} years, "
-            f"with break-even reached in {op_be_years:.1f} years."
+            f"with break-even reached in about {_format_duration(op_be_years)}."
         )
     elif savings >= Decimal(-1000) and savings <= Decimal(1000):
         rating = RecommendationRating.MAYBE

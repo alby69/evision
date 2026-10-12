@@ -65,3 +65,21 @@ export const fmtYears = (v: unknown): string => {
   const n = toNumber(v);
   return `${num1.format(n)} ${n === 1 ? 'anno' : 'anni'}`;
 };
+
+/**
+ * Formats a duration in years as years + months, e.g.
+ * 1.6 -> "1 anno e 7 mesi"; 0.5 -> "6 mesi"; 2 -> "2 anni".
+ */
+export const fmtDuration = (v: unknown): string => {
+  const n = toNumber(v);
+  if (n <= 0) return '0 mesi';
+  const totalMonths = Math.round(n * 12);
+  if (totalMonths < 12) {
+    return `${totalMonths} ${totalMonths === 1 ? 'mese' : 'mesi'}`;
+  }
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+  const yearsPart = `${years} ${years === 1 ? 'anno' : 'anni'}`;
+  if (months === 0) return yearsPart;
+  return `${yearsPart} e ${months} ${months === 1 ? 'mese' : 'mesi'}`;
+};

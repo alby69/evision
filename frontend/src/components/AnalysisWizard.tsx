@@ -169,6 +169,7 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
   });
 
   const [currentMileage, setCurrentMileage] = useState<number | ''>('');
+  const [catalogPriceUnknown, setCatalogPriceUnknown] = useState(false);
   const [valuation, setValuation] = useState<{
     loading: boolean;
     error: string | null;
@@ -360,12 +361,24 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
     const grossBatt = item.battery_capacity || usableBatt;
     const cons = item.vehicle_consumption || candidateVehicle.extraurban_consumption;
 
+    // Never inherit a stale price from a different car: if the catalog has no
+    // price for this model, clear it and let the user enter the real one.
+    const hasPrice = item.estimated_price_eur != null && item.estimated_price_eur > 0;
+    const sameVehicle =
+      candidateVehicle.brand === item.make && candidateVehicle.model === item.model;
+    const purchasePrice = hasPrice
+      ? item.estimated_price_eur!
+      : sameVehicle
+        ? candidateVehicle.purchase_price
+        : 0;
+    setCatalogPriceUnknown(!hasPrice);
+
     setCandidateVehicle({
       ...candidateVehicle,
       brand: item.make,
       model: item.model,
       year: item.year || item.year_start || candidateVehicle.year,
-      purchase_price: item.estimated_price_eur || candidateVehicle.purchase_price,
+      purchase_price: purchasePrice,
       battery_capacity: grossBatt,
       usable_battery_capacity: usableBatt,
       wltp_range: item.electric_range || candidateVehicle.wltp_range,
@@ -722,10 +735,18 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
                         min={0}
                         value={candidateVehicle.purchase_price}
                         aria-invalid={candidateVehicle.purchase_price <= 0}
-                        onChange={(e) =>
-                          setCandidateVehicle({ ...candidateVehicle, purchase_price: Number(e.target.value) })
-                        }
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+                          setCandidateVehicle({ ...candidateVehicle, purchase_price: value });
+                          if (value > 0) setCatalogPriceUnknown(false);
+                        }}
                       />
+                      {catalogPriceUnknown && (
+                        <p className="mt-1 text-[11px] leading-relaxed text-amber-700 dark:text-amber-400">
+                          Prezzo non disponibile per questo modello: inserisci il prezzo reale «chiavi in mano»
+                          (incentivi e permuta vengono calcolati dal motore, non vanno sottratti qui).
+                        </p>
+                      )}
                     </Field>
                     <Field label="Batteria utile (kWh)" htmlFor="ev-battery">
                       <NumberInput
