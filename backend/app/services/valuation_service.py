@@ -183,7 +183,7 @@ async def estimate_vehicle_value(request: VehicleValuationRequest) -> VehicleVal
         except httpx.HTTPStatusError as exc:
             logger.warning("AutoScout24 scraper failed: %s", exc)
             raise ValuationUnavailable("Scraper AutoScout24 non disponibile.") from exc
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             if isinstance(exc, ValuationUnavailable):
                 raise
             logger.warning("AutoScout24 scraper request failed: %s", exc)

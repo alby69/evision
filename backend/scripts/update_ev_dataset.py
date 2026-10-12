@@ -21,7 +21,7 @@ DEST = Path(__file__).resolve().parents[1] / "data" / "open-ev-data.csv"
 
 def _get(url: str) -> bytes:
     request = urllib.request.Request(url, headers={"User-Agent": "evision-dataset-updater"})
-    with urllib.request.urlopen(request, timeout=60) as response:  # noqa: S310
+    with urllib.request.urlopen(request, timeout=60) as response:
         return response.read()
 
 
