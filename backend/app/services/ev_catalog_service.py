@@ -156,6 +156,18 @@ MOCK_EV_CATALOG: list[EVCatalogItem] = [
         vehicle_consumption=17.1,
         estimated_price_eur=34200.0,
     ),
+    EVCatalogItem(
+        make="Nissan",
+        model="Leaf 60kWh",
+        year_start=2025,
+        year=2025,
+        battery_capacity=60.0,
+        battery_useable_capacity=59.0,
+        electric_range=385.0,
+        charge_power_max=100.0,
+        vehicle_consumption=16.2,
+        estimated_price_eur=39900.0,
+    ),
 ]
 
 
