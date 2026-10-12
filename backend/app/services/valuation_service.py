@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import re
 import statistics
@@ -45,6 +46,12 @@ MIN_SAMPLE = 3
 MAX_COMPARABLES = 5
 TRADE_IN_RATIO = 0.85  # dealer trade-in vs. private-sale asking price
 ROUNDING_STEP = 50
+
+# The AutoScout24 scraper renders the page on demand and can take 40-60s on a
+# cold run, so a short timeout would fail spuriously. We allow a generous read
+# timeout and retry a couple of times before giving up.
+REQUEST_TIMEOUT = httpx.Timeout(90.0, connect=10.0)
+MAX_ATTEMPTS = 3
 
 _ARTICLE_RE = re.compile(r'<article class="cldt-summary-full-item[^"]*"[^>]*>')
 
@@ -177,17 +184,31 @@ async def estimate_vehicle_value(request: VehicleValuationRequest) -> VehicleVal
     url = _build_search_url(request.make, request.model, request.year)
     logger.debug("AutoScout24 search URL: %s", url)
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        try:
-            html = await _fetch_page(client, api_key, url)
-        except httpx.HTTPStatusError as exc:
-            logger.warning("AutoScout24 scraper failed: %s", exc)
-            raise ValuationUnavailable("Scraper AutoScout24 non disponibile.") from exc
-        except Exception as exc:
-            if isinstance(exc, ValuationUnavailable):
+    async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
+        last_error: Exception | None = None
+        for attempt in range(1, MAX_ATTEMPTS + 1):
+            try:
+                html = await _fetch_page(client, api_key, url)
+                break
+            except ValuationUnavailable:
                 raise
-            logger.warning("AutoScout24 scraper request failed: %s", exc)
-            raise ValuationUnavailable("Servizio di stima non disponibile.") from exc
+            except httpx.TimeoutException as exc:
+                last_error = exc
+                logger.warning(
+                    "AutoScout24 scraper timeout (tentativo %d/%d)", attempt, MAX_ATTEMPTS
+                )
+                if attempt < MAX_ATTEMPTS:
+                    await asyncio.sleep(1.5 * attempt)
+            except httpx.HTTPStatusError as exc:
+                logger.warning("AutoScout24 scraper failed: %s", exc)
+                raise ValuationUnavailable("Scraper AutoScout24 non disponibile.") from exc
+            except Exception as exc:
+                logger.warning("AutoScout24 scraper request failed: %s", exc)
+                raise ValuationUnavailable("Servizio di stima non disponibile.") from exc
+        else:
+            raise ValuationUnavailable(
+                "Il servizio di stima è momentaneamente lento. Riprova tra poco."
+            ) from last_error
 
     listings = _parse_listings(html)
     if not listings:

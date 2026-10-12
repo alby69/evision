@@ -609,6 +609,11 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
                         Stima valore di mercato
                       </button>
                     </div>
+                    {valuation.loading && (
+                      <p className="mt-2 text-xs text-muted-foreground" role="status">
+                        Ricerca annunci in corso… può richiedere fino a un minuto.
+                      </p>
+                    )}
                     {valuation.info && (
                       <p className="mt-2 text-xs font-medium text-emerald-700 dark:text-emerald-400" role="status">
                         {valuation.info}
