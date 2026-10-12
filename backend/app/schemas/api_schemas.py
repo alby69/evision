@@ -28,6 +28,53 @@ class EVCatalogItem(BaseModel):
     vehicle_consumption: float | None = Field(default=None, description="Average consumption in kWh/100km")
     estimated_price_eur: float | None = Field(default=None, description="Estimated purchase price in EUR")
 
+
+class CarFacetValue(BaseModel):
+    value: int | str
+    count: int
+
+
+class CarCatalogItem(BaseModel):
+    make: str
+    model: str
+    year: int | None = None
+    fuel_type: str | None = Field(default=None, description="Raw fuel type from the catalog (gas, diesel, ...)")
+    transmission: str | None = None
+    drive: str | None = None
+    cylinders: int | None = None
+    displacement: float | None = Field(default=None, description="Engine displacement in liters")
+    car_class: str | None = None
+
+
+class VehicleValuationRequest(BaseModel):
+    make: str = Field(min_length=1, description="Vehicle make/brand")
+    model: str = Field(min_length=1, description="Vehicle model")
+    year: int | None = Field(default=None, ge=1950, le=2100, description="Registration year")
+    mileage: int | None = Field(default=None, ge=0, description="Current odometer in km (optional)")
+    fuel_type: str | None = Field(default=None, description="Fuel type, when known")
+    source: str | None = Field(default=None, description="Override the marketplace slug to query")
+
+
+class ValuationComparable(BaseModel):
+    title: str
+    year: int | None = None
+    mileage: int | None = None
+    price_eur: float
+    location: str | None = None
+    url: str | None = None
+
+
+class VehicleValuationResponse(BaseModel):
+    estimated_value: float = Field(description="Estimated market value in EUR")
+    trade_in_value: float = Field(description="Estimated dealer trade-in value in EUR")
+    low_estimate: float
+    high_estimate: float
+    currency: str = "EUR"
+    sample_size: int
+    source: str
+    confidence: str = Field(description="low | medium | high")
+    comparables: list[ValuationComparable] = Field(default_factory=list)
+
 class TCORequest(BaseModel):
     vehicle: Vehicle
     usage: UsageProfile

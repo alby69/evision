@@ -37,6 +37,48 @@ def test_list_vehicles():
     assert isinstance(data, list)
     assert len(data) >= 3
 
+
+def test_car_facets_endpoint():
+    response = client.get("/api/v1/vehicles/car-facets?facets=make")
+    assert response.status_code == 200
+    data = response.json()
+    assert "make" in data
+    assert isinstance(data["make"], list)
+    assert len(data["make"]) > 0
+    assert {"value", "count"} <= set(data["make"][0].keys())
+
+    models_res = client.get("/api/v1/vehicles/car-facets?facets=model&make=Toyota")
+    assert models_res.status_code == 200
+    models = models_res.json()
+    assert "model" in models
+    assert len(models["model"]) > 0
+
+
+def test_car_catalog_endpoint():
+    response = client.get("/api/v1/vehicles/cars?make=Toyota&model=Corolla")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) > 0
+    assert all("make" in item and "model" in item for item in data)
+
+
+def test_valuation_endpoint_unavailable_without_key(monkeypatch):
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "RAPIDAPI_API_KEY", "")
+    response = client.post(
+        "/api/v1/vehicles/valuation",
+        json={"make": "Fiat", "model": "Panda", "year": 2019, "mileage": 80000},
+    )
+    assert response.status_code == 503
+    assert "RAPIDAPI_API_KEY" in response.json()["detail"]
+
+
+def test_valuation_endpoint_validation():
+    response = client.post("/api/v1/vehicles/valuation", json={"make": "", "model": ""})
+    assert response.status_code == 422
+
 def test_demo_analysis_endpoint():
     response = client.get("/api/v1/analyses/demo")
     assert response.status_code == 200

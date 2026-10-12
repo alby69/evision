@@ -4,6 +4,9 @@ import httpx
 
 from app.core.config import settings
 from app.schemas.api_schemas import EVCatalogItem
+from app.services.ev_dataset import search_ev_dataset
+from app.services.numeric_utils import parse_int as _parse_int
+from app.services.numeric_utils import parse_number as _parse_number
 
 logger = logging.getLogger(__name__)
 
@@ -196,6 +199,20 @@ def _filter_mock_catalog(
     return results[:limit]
 
 
+def _merge_unique(items: list[EVCatalogItem], limit: int) -> list[EVCatalogItem]:
+    merged: list[EVCatalogItem] = []
+    seen: set[tuple[str, str]] = set()
+    for item in items:
+        key = (item.make.lower(), item.model.lower())
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(item)
+        if len(merged) >= limit:
+            break
+    return merged
+
+
 async def search_ev_catalog(
     make: str | None = None,
     model: str | None = None,
@@ -205,13 +222,21 @@ async def search_ev_catalog(
     limit: int = 10,
 ) -> list[EVCatalogItem]:
     """
-    Searches EV specifications catalog.
-    Uses API Ninjas if EV_CATALOG_API_KEY is configured, falling back gracefully to mock catalog data.
-    """
-    api_key = settings.EV_CATALOG_API_KEY.strip()
+    Searches the EV specifications catalog.
 
+    Primary source is the bundled OpenEV Data dataset (rich, offline). Results are
+    topped up with the curated mock catalog, then — only if nothing matched — the
+    online API Ninjas endpoint is queried as a last resort.
+    """
+    dataset_results = search_ev_dataset(make, model, min_year, max_year, search, limit)
+    mock_results = _filter_mock_catalog(make, model, min_year, max_year, search, limit)
+    combined = _merge_unique([*dataset_results, *mock_results], limit)
+    if combined:
+        return combined
+
+    api_key = settings.EV_CATALOG_API_KEY.strip()
     if not api_key:
-        return _filter_mock_catalog(make, model, min_year, max_year, search, limit)
+        return []
 
     params: dict[str, str | int] = {}
     if make:
@@ -240,14 +265,17 @@ async def search_ev_catalog(
                         item = EVCatalogItem(
                             make=str(raw.get("make") or "Unknown"),
                             model=str(raw.get("model") or "EV Model"),
-                            year_start=raw.get("year_start") or raw.get("year"),
-                            year=raw.get("year"),
-                            battery_capacity=raw.get("battery_capacity"),
-                            battery_useable_capacity=raw.get("battery_useable_capacity") or raw.get("battery_capacity"),
-                            electric_range=raw.get("electric_range") or raw.get("range"),
-                            charge_power_max=raw.get("charge_power_max"),
-                            vehicle_consumption=raw.get("vehicle_consumption"),
-                            estimated_price_eur=raw.get("estimated_price_eur"),
+                            year_start=_parse_int(raw.get("year_start") or raw.get("year")),
+                            year=_parse_int(raw.get("year")),
+                            battery_capacity=_parse_number(raw.get("battery_capacity")),
+                            battery_useable_capacity=(
+                                _parse_number(raw.get("battery_useable_capacity"))
+                                or _parse_number(raw.get("battery_capacity"))
+                            ),
+                            electric_range=_parse_number(raw.get("electric_range") or raw.get("range")),
+                            charge_power_max=_parse_number(raw.get("charge_power_max")),
+                            vehicle_consumption=_parse_number(raw.get("vehicle_consumption")),
+                            estimated_price_eur=_parse_number(raw.get("estimated_price_eur")),
                         )
                         items.append(item)
 

@@ -48,7 +48,9 @@ The core calculation engine is completely pure and decoupled from HTTP framework
 - **API** (`api/v1/`): FastAPI routers — `vehicles`, `calculations`, `analyses`. Request/response contracts live in `schemas/api_schemas.py`; the OpenAPI spec is served at `/openapi.json`.
 - **Services** (`services/`):
   - `analysis_service.py`: orchestrates the full analysis (TCO, break-even, scenarios, sensitivity, recommendation) in one call.
-  - `ev_catalog_service.py`: external EV catalog search proxy with fallback to built-in demo data when no API key is configured.
+  - `ev_catalog_service.py`: EV catalog search. Primary source is the bundled OpenEV Data dataset (`ev_dataset.py`), topped up with a curated demo catalog; the external API Ninjas endpoint is only a last-resort fallback.
+  - `car_catalog_service.py`: conventional (ICE) car lookup and cascading facet dropdowns via the API Ninjas free-tier endpoints, with a built-in fallback when no key is configured.
+  - `valuation_service.py`: used-car value estimate from comparable AutoScout24.it listings (RapidAPI "AutoScout24 Scraper"); scrapes the search page, parses listing attributes and returns a robust median plus a trade-in estimate.
 - **Core** (`core/`): settings (`config.py`, env-driven), SQLAlchemy/PostgreSQL setup (`database.py`), demo seeds (`seed.py`).
 - **CLI** (`cli.py`): standalone command-line interface to the engine.
 - **Persistence note**: vehicle records and saved analyses are currently kept in-memory per process; PostgreSQL models/Alembic remain for the persistent domain data.

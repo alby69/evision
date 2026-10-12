@@ -135,14 +135,30 @@ def test_tco_calculation_leasing(candidate_zoe_ev, usage_25k, standard_charging,
     assert tco_res.total_tco > Decimal(0)
     assert tco_res.total_financing_interest >= Decimal(0)
 
+def test_owned_vehicle_has_no_upfront_cost(current_diesel_car, usage_25k, standard_charging, standard_fuel, ownership_5yr):
+    owned = calculate_vehicle_tco(
+        current_diesel_car, usage_25k, standard_charging, standard_fuel, ownership_5yr, already_owned=True
+    )
+    # The already-owned car is a sunk cost: no upfront outlay, and it must be
+    # depreciated from its current market value, not its historic price.
+    assert owned.net_purchase_cost == Decimal(0)
+    assert owned.residual_value_end < current_diesel_car.current_value
+    assert owned.residual_value_end < current_diesel_car.purchase_price
+
 def test_break_even_calculation(current_diesel_car, candidate_zoe_ev, usage_25k, standard_charging, standard_fuel, ownership_5yr):
-    curr_tco = calculate_vehicle_tco(current_diesel_car, usage_25k, standard_charging, standard_fuel, ownership_5yr)
+    curr_tco = calculate_vehicle_tco(
+        current_diesel_car, usage_25k, standard_charging, standard_fuel, ownership_5yr, already_owned=True
+    )
     cand_tco = calculate_vehicle_tco(candidate_zoe_ev, usage_25k, standard_charging, standard_fuel, ownership_5yr)
 
     be = calculate_break_even(curr_tco, cand_tco, usage_25k.annual_km)
+    assert curr_tco.net_purchase_cost == Decimal(0)
     assert be.annual_operational_savings > Decimal(0)
     assert be.operational_break_even_years is not None
-    assert be.operational_break_even_years > 0.0
+    # The EV costs more upfront than the already-owned diesel: the payback must
+    # be a realistic multi-year horizon, not an implausibly small value.
+    assert 2.0 <= be.operational_break_even_years <= 15.0
+    assert be.operational_break_even_months == pytest.approx(be.operational_break_even_years * 12, abs=0.2)
 
 def test_range_and_battery_degradation(candidate_zoe_ev, usage_25k):
     range_res = calculate_real_world_range(candidate_zoe_ev, usage_25k)
@@ -161,7 +177,9 @@ def test_scenarios_and_recommendation(current_diesel_car, candidate_zoe_ev, usag
     factors = calculate_sensitivity_factors(current_diesel_car, candidate_zoe_ev, usage_25k, standard_charging, standard_fuel, ownership_5yr)
     assert len(factors) > 0
 
-    curr_tco = calculate_vehicle_tco(current_diesel_car, usage_25k, standard_charging, standard_fuel, ownership_5yr)
+    curr_tco = calculate_vehicle_tco(
+        current_diesel_car, usage_25k, standard_charging, standard_fuel, ownership_5yr, already_owned=True
+    )
     cand_tco = calculate_vehicle_tco(candidate_zoe_ev, usage_25k, standard_charging, standard_fuel, ownership_5yr)
     be = calculate_break_even(curr_tco, cand_tco, usage_25k.annual_km)
 

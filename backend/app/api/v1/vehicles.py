@@ -2,8 +2,17 @@ from fastapi import APIRouter, HTTPException, Query
 
 from app.core.seed import DEMO_VEHICLES
 from app.domain.models.vehicle import Vehicle
-from app.schemas.api_schemas import EVCatalogItem
+from app.schemas.api_schemas import (
+    CarCatalogItem,
+    CarFacetValue,
+    EVCatalogItem,
+    VehicleValuationRequest,
+    VehicleValuationResponse,
+)
+from app.services.car_catalog_service import get_car_facets as get_car_facets_data
+from app.services.car_catalog_service import search_cars
 from app.services.ev_catalog_service import search_ev_catalog
+from app.services.valuation_service import ValuationUnavailable, estimate_vehicle_value
 
 router = APIRouter(prefix="/vehicles", tags=["Vehicles"])
 
@@ -36,6 +45,64 @@ async def get_ev_catalog(
         search=search,
         limit=limit,
     )
+
+
+@router.get("/car-facets", response_model=dict[str, list[CarFacetValue]])
+async def get_car_facets(
+    facets: str = Query(..., description="Comma-separated dimensions, e.g. make,model,fuel (max 6)"),
+    make: str | None = Query(None, description="Narrow to a vehicle make"),
+    model: str | None = Query(None, description="Narrow to a vehicle model"),
+    generation: str | None = Query(None, description="Narrow to a generation"),
+    body: str | None = Query(None, description="Narrow to a body style"),
+    fuel: str | None = Query(None, description="Narrow to a fuel type"),
+    transmission: str | None = Query(None, description="Narrow to a transmission"),
+    drive: str | None = Query(None, description="Narrow to a drive type"),
+    year: int | None = Query(None, description="Narrow to a production year"),
+) -> dict[str, list[CarFacetValue]]:
+    """
+    Cascading dropdown values for the conventional (ICE) car catalog (API Ninjas /v2/carfacets).
+
+    Available on the API Ninjas free tier; falls back to a local dataset when no key is set.
+    """
+    facet_list = [facet.strip() for facet in facets.split(",") if facet.strip()]
+    return await get_car_facets_data(
+        facet_list,
+        make=make,
+        model=model,
+        generation=generation,
+        body=body,
+        fuel=fuel,
+        transmission=transmission,
+        drive=drive,
+        year=year,
+    )
+
+
+@router.get("/cars", response_model=list[CarCatalogItem])
+async def list_cars(
+    make: str = Query(..., description="Vehicle make, e.g. Volkswagen"),
+    model: str = Query(..., description="Vehicle model, e.g. Golf"),
+    year: int | None = Query(None, description="Filter by production year"),
+    fuel_type: str | None = Query(None, description="Filter by fuel type (gasoline, diesel, hybrid, ...)"),
+) -> list[CarCatalogItem]:
+    """
+    Searches conventional cars by make/model (API Ninjas /v1/cars, available on the free tier).
+    """
+    return await search_cars(make=make, model=model, year=year, fuel_type=fuel_type)
+
+
+@router.post("/valuation", response_model=VehicleValuationResponse)
+async def estimate_value(request: VehicleValuationRequest) -> VehicleValuationResponse:
+    """
+    Estimates the current market/trade-in value of a used car from comparable listings.
+
+    Derives the estimate from AutoScout24.it listings (RapidAPI "AutoScout24 Scraper"),
+    filtered by make/model/year and mileage when known.
+    """
+    try:
+        return await estimate_vehicle_value(request)
+    except ValuationUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.post("", response_model=Vehicle, status_code=201)

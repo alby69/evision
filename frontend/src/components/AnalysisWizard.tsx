@@ -7,8 +7,10 @@ import {
   VehicleType,
   FuelType,
   EVCatalogItem,
+  CarSelection,
 } from '../types/api';
 import { EVSearchSelect } from './EVSearchSelect';
+import { CarSearchSelect } from './CarSearchSelect';
 import { Field, NumberInput, SelectInput, RangeSlider, TextInput } from './ui';
 import {
   X,
@@ -21,7 +23,9 @@ import {
   ChevronRight,
   Loader2,
   Check,
+  Sparkles,
 } from 'lucide-react';
+import { estimateVehicleValue } from '../services/api';
 import { fmtEUR, fmtNum } from '../utils/format';
 
 export interface AnalysisPayload {
@@ -51,6 +55,18 @@ const toPercent = (dec: number) => Math.round(dec * 100);
 const fromPercent = (pct: number) => clamp(pct, 0, 100) / 100;
 const splitSum = (...values: number[]) => values.reduce((acc, v) => acc + v, 0);
 const isFull = (sumDec: number) => Math.abs(sumDec - 1) < 0.005;
+
+const FUEL_MAP: Record<string, { fuel: FuelType; type: VehicleType }> = {
+  gasoline: { fuel: FuelType.PETROL, type: VehicleType.PETROL },
+  gas: { fuel: FuelType.PETROL, type: VehicleType.PETROL },
+  petrol: { fuel: FuelType.PETROL, type: VehicleType.PETROL },
+  diesel: { fuel: FuelType.DIESEL, type: VehicleType.DIESEL },
+  electric: { fuel: FuelType.ELECTRICITY, type: VehicleType.BEV },
+  electricity: { fuel: FuelType.ELECTRICITY, type: VehicleType.BEV },
+  hybrid: { fuel: FuelType.PETROL, type: VehicleType.HEV },
+  lpg: { fuel: FuelType.LPG, type: VehicleType.LPG },
+  cng: { fuel: FuelType.CNG, type: VehicleType.CNG },
+};
 
 const PercentInput: React.FC<{
   label: string;
@@ -151,6 +167,13 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
     insurance_cost_per_year: 500,
     tire_cost_per_year: 120,
   });
+
+  const [currentMileage, setCurrentMileage] = useState<number | ''>('');
+  const [valuation, setValuation] = useState<{
+    loading: boolean;
+    error: string | null;
+    info: string | null;
+  }>({ loading: false, error: null, info: null });
 
   const [usage, setUsage] = useState<UsageProfile>({
     annual_km: 25000,
@@ -272,6 +295,65 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
     }
   };
 
+  const handleCurrentCarSelect = (selection: CarSelection) => {
+    const mapped = selection.fuel ? FUEL_MAP[selection.fuel.trim().toLowerCase()] : undefined;
+    setCurrentVehicle((prev) => ({
+      ...prev,
+      brand: selection.make,
+      model: selection.model,
+      version: selection.generation ?? prev.version,
+      year: selection.year ?? prev.year,
+      fuel_type: mapped?.fuel ?? prev.fuel_type,
+      vehicle_type: mapped?.type ?? prev.vehicle_type,
+    }));
+    void runValuation(
+      selection.make,
+      selection.model,
+      selection.year,
+      currentMileage === '' ? undefined : Number(currentMileage),
+    );
+  };
+
+  const runValuation = async (make: string, model: string, year?: number, mileage?: number) => {
+    if (!make.trim() || !model.trim()) {
+      setValuation({ loading: false, error: 'Inserisci marca e modello prima di stimare il valore.', info: null });
+      return;
+    }
+    setValuation({ loading: true, error: null, info: null });
+    try {
+      const result = await estimateVehicleValue({
+        make,
+        model,
+        year,
+        mileage: mileage === undefined || mileage <= 0 ? undefined : mileage,
+      });
+      const value = Math.round(result.estimated_value);
+      setCurrentVehicle((prev) => ({ ...prev, current_value: value }));
+      setOwnership((prev) => ({ ...prev, trade_in_value: value }));
+      setValuation({
+        loading: false,
+        error: null,
+        info: `Valore stimato da ${result.sample_size} annunci simili (${result.source}). Intervallo ${fmtEUR(
+          result.low_estimate,
+        )}–${fmtEUR(result.high_estimate)}; permuta stimata ${fmtEUR(result.trade_in_value)}.`,
+      });
+    } catch (err) {
+      setValuation({
+        loading: false,
+        error: err instanceof Error ? err.message : 'Stima non disponibile.',
+        info: null,
+      });
+    }
+  };
+
+  const handleEstimateValue = () =>
+    runValuation(
+      currentVehicle.brand,
+      currentVehicle.model,
+      currentVehicle.year,
+      currentMileage === '' ? undefined : Number(currentMileage),
+    );
+
   const handleCatalogVehicleSelect = (item: EVCatalogItem) => {
     const usableBatt =
       item.battery_useable_capacity || item.battery_capacity || candidateVehicle.usable_battery_capacity || 50;
@@ -392,7 +474,12 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
                 <p className="mt-1 text-sm text-muted-foreground">
                   È la base di confronto: il motore calcola quanto continua a costarti se lo tieni.
                 </p>
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="mt-4">
+                  <CarSearchSelect onSelectVehicle={handleCurrentCarSelect} />
+                </div>
+                <div className="mt-4 border-t border-border pt-4">
+                  <p className="overline mb-3">Dettagli — modificabili</p>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Field label="Marca *" htmlFor="cv-brand">
                     <TextInput
                       id="cv-brand"
@@ -437,6 +524,7 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
                       <option value={FuelType.PETROL}>Benzina</option>
                       <option value={FuelType.LPG}>GPL</option>
                       <option value={FuelType.CNG}>Metano</option>
+                      <option value={FuelType.ELECTRICITY}>Elettrico</option>
                     </SelectInput>
                   </Field>
                   <Field
@@ -475,6 +563,50 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
                       }
                     />
                   </Field>
+                  </div>
+
+                  <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                    <div className="flex flex-wrap items-end gap-3">
+                      <Field
+                        label="Km percorsi (opzionale)"
+                        htmlFor="cv-mileage"
+                        hint="Filtra gli annunci simili per chilometraggio; stima più precisa."
+                      >
+                        <NumberInput
+                          id="cv-mileage"
+                          min={0}
+                          step={1000}
+                          value={currentMileage}
+                          onChange={(e) => setCurrentMileage(e.target.value === '' ? '' : Number(e.target.value))}
+                        />
+                      </Field>
+                      <button
+                        type="button"
+                        onClick={handleEstimateValue}
+                        disabled={
+                          valuation.loading || !currentVehicle.brand.trim() || !currentVehicle.model.trim()
+                        }
+                        className="btn-outline px-4"
+                      >
+                        {valuation.loading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-4 w-4" />
+                        )}
+                        Stima valore di mercato
+                      </button>
+                    </div>
+                    {valuation.info && (
+                      <p className="mt-2 text-xs font-medium text-emerald-700 dark:text-emerald-400" role="status">
+                        {valuation.info}
+                      </p>
+                    )}
+                    {valuation.error && (
+                      <p className="mt-2 text-xs font-medium text-destructive" role="alert">
+                        {valuation.error}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </section>
             )}

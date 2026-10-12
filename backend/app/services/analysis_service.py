@@ -37,7 +37,7 @@ def run_full_analysis(
     fuel: FuelProfile,
     ownership: OwnershipScenario,
 ) -> dict[str, Any]:
-    curr_tco: VehicleTCOResult = calculate_vehicle_tco(current_vehicle, usage, charging, fuel, ownership)
+    curr_tco: VehicleTCOResult = calculate_vehicle_tco(current_vehicle, usage, charging, fuel, ownership, already_owned=True)
     cand_tco: VehicleTCOResult = calculate_vehicle_tco(candidate_vehicle, usage, charging, fuel, ownership)
 
     be: BreakEvenResult = calculate_break_even(curr_tco, cand_tco, usage.annual_km)

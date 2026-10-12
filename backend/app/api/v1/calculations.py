@@ -20,7 +20,7 @@ def compute_tco(req: TCORequest):
 @router.post("/break-even", response_model=BreakEvenResult)
 def compute_break_even(req: BreakEvenRequest):
     """Calculates operational and total break-even metrics between two vehicles."""
-    curr_tco = calculate_vehicle_tco(req.current_vehicle, req.usage, req.charging, req.fuel, req.ownership)
+    curr_tco = calculate_vehicle_tco(req.current_vehicle, req.usage, req.charging, req.fuel, req.ownership, already_owned=True)
     cand_tco = calculate_vehicle_tco(req.candidate_vehicle, req.usage, req.charging, req.fuel, req.ownership)
     return calculate_break_even(curr_tco, cand_tco, req.usage.annual_km)
 

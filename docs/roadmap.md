@@ -33,7 +33,8 @@ Questo documento traccia l'evoluzione del progetto, con dettagli tecnici e crite
 
 ## 🚧 v0.3 - Vehicle Catalog & Live Data Integration (IN SVILUPPO)
 *Obiettivo: Ridurre l'attrito nell'inserimento dati e aumentare la precisione con dati reali.*
-- [x] **Vehicle Catalog Search**: `GET /api/v1/vehicles/catalog` (proxy su API Ninjas, parametri `make`/`model`/`search`/`min_year`/`max_year`/`limit`) con combobox accessibile nel wizard e fallback ai dati demo senza API key. Chiave configurabile via `EV_CATALOG_API_KEY`.
+- [x] **Vehicle Catalog Search**: `GET /api/v1/vehicles/catalog` (parametri `make`/`model`/`search`/`min_year`/`max_year`/`limit`) e combobox accessibile nel wizard. Fonte primaria: dataset aperto **OpenEV Data** (`backend/data/open-ev-data.csv`, ~490 varianti), arricchito da catalogo demo curato e, solo come ultima risorsa, API Ninjas (`EV_CATALOG_API_KEY`). Aggiornabile con `python backend/scripts/update_ev_dataset.py`.
+- [x] **Used-Car Valuation**: `POST /api/v1/vehicles/valuation` — stima del valore di mercato e di permuta dai annunci AutoScout24.it comparabili via RapidAPI "AutoScout24 Scraper" (`RAPIDAPI_API_KEY`); usato dal wizard per auto-popolare valore attuale e permuta alla selezione dell'auto.
 - [ ] **Vehicle Catalog Import**: Script di seeding avanzato per importare dataset pubblici di veicoli EV (es. formato CSV/JSON con specifiche tecniche standardizzate) direttamente in locale.
 - [ ] **Live Price Feeds**: Integrazione con API pubbliche o feed RSS per i prezzi medi di carburante ed elettricità per regione/nazione.
 - [ ] **Listing Auto-Parser**: Endpoint backend (`POST /api/v1/parse-listing`) che accetta un URL (es. AutoScout24, Subito) ed estrae tramite scraping strutturato (o API se disponibile) marca, modello, prezzo, km e anno, popolando automaticamente il wizard.

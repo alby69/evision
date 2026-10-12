@@ -18,7 +18,7 @@ def simulate_scenarios(
     ownership: OwnershipScenario,
 ) -> ScenarioResult:
     # Base
-    base_curr_tco = calculate_vehicle_tco(current_vehicle, usage, charging, fuel, ownership)
+    base_curr_tco = calculate_vehicle_tco(current_vehicle, usage, charging, fuel, ownership, already_owned=True)
     base_cand_tco = calculate_vehicle_tco(candidate_vehicle, usage, charging, fuel, ownership)
     base_be = calculate_break_even(base_curr_tco, base_cand_tco, usage.annual_km)
 
@@ -36,7 +36,7 @@ def simulate_scenarios(
     pess_candidate.maintenance_cost_per_year *= Decimal("1.20")
     pess_candidate.ev_depreciation_modifier += 0.20
 
-    pess_curr_tco = calculate_vehicle_tco(current_vehicle, usage, pess_charging, pess_fuel, ownership)
+    pess_curr_tco = calculate_vehicle_tco(current_vehicle, usage, pess_charging, pess_fuel, ownership, already_owned=True)
     pess_cand_tco = calculate_vehicle_tco(pess_candidate, usage, pess_charging, pess_fuel, ownership)
     pess_be = calculate_break_even(pess_curr_tco, pess_cand_tco, usage.annual_km)
 
@@ -51,7 +51,7 @@ def simulate_scenarios(
     opt_candidate = candidate_vehicle.model_copy(deep=True)
     opt_candidate.maintenance_cost_per_year *= Decimal("0.90")
 
-    opt_curr_tco = calculate_vehicle_tco(current_vehicle, usage, opt_charging, opt_fuel, ownership)
+    opt_curr_tco = calculate_vehicle_tco(current_vehicle, usage, opt_charging, opt_fuel, ownership, already_owned=True)
     opt_cand_tco = calculate_vehicle_tco(opt_candidate, usage, opt_charging, opt_fuel, ownership)
     opt_be = calculate_break_even(opt_curr_tco, opt_cand_tco, usage.annual_km)
 

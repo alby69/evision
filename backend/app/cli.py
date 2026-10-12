@@ -28,7 +28,7 @@ def run_analysis(filepath: str) -> None:
     fuel = FuelProfile(**data.get("fuel", {}))
     ownership = OwnershipScenario(**data.get("ownership", {}))
 
-    curr_tco = calculate_vehicle_tco(current_car, usage, charging, fuel, ownership)
+    curr_tco = calculate_vehicle_tco(current_car, usage, charging, fuel, ownership, already_owned=True)
     cand_tco = calculate_vehicle_tco(candidate_car, usage, charging, fuel, ownership)
     be = calculate_break_even(curr_tco, cand_tco, usage.annual_km)
     rec = generate_decision_recommendation(

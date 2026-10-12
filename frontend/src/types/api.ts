@@ -29,6 +29,66 @@ export interface EVCatalogItem {
   estimated_price_eur?: number;
 }
 
+export interface CarFacetValue {
+  value: string | number;
+  count: number;
+}
+
+export type CarFacetMap = Record<string, CarFacetValue[]>;
+
+export interface CarCatalogItem {
+  make: string;
+  model: string;
+  year?: number;
+  fuel_type?: string;
+  transmission?: string;
+  drive?: string;
+  cylinders?: number;
+  displacement?: number;
+  car_class?: string;
+}
+
+export interface CarSelection {
+  make: string;
+  model: string;
+  generation?: string;
+  year?: number;
+  fuel?: string;
+  body?: string;
+  transmission?: string;
+  drive?: string;
+}
+
+export interface VehicleValuationRequest {
+  make: string;
+  model: string;
+  year?: number;
+  mileage?: number;
+  fuel_type?: string;
+  source?: string;
+}
+
+export interface ValuationComparable {
+  title: string;
+  year?: number;
+  mileage?: number;
+  price_eur: number;
+  location?: string;
+  url?: string;
+}
+
+export interface VehicleValuation {
+  estimated_value: number;
+  trade_in_value: number;
+  low_estimate: number;
+  high_estimate: number;
+  currency: string;
+  sample_size: number;
+  source: string;
+  confidence: 'low' | 'medium' | 'high';
+  comparables: ValuationComparable[];
+}
+
 export enum RecommendationRating {
   STRONG_BUY = 'STRONG_BUY',
   BUY = 'BUY',

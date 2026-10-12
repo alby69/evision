@@ -19,13 +19,21 @@ def calculate_vehicle_tco(
     charging: ChargingProfile,
     fuel: FuelProfile,
     ownership: OwnershipScenario,
+    already_owned: bool = False,
 ) -> VehicleTCOResult:
     # 1. Net Purchase Price
     gross_price = vehicle.purchase_price
     incentive = ownership.incentive_amount
     trade_in = ownership.trade_in_value
 
-    net_purchase_cost = max(Decimal(0), gross_price - incentive - trade_in)
+    if already_owned:
+        # The vehicle is already in the owner's possession: its acquisition
+        # cost is a sunk cost and must not be counted as an upfront outlay in
+        # a keep-vs-switch comparison (otherwise the trade-in is credited twice
+        # and the price gap collapses, producing an unreliable break-even).
+        net_purchase_cost = Decimal(0)
+    else:
+        net_purchase_cost = max(Decimal(0), gross_price - incentive - trade_in)
 
     # 2. Financing Calculation
     financing = ownership.financing
@@ -88,7 +96,12 @@ def calculate_vehicle_tco(
 
     yearly_depreciation_rates = [0.20, 0.12, 0.10, 0.08, 0.07, 0.06, 0.05, 0.05, 0.04, 0.04]
 
-    current_market_val = vehicle.purchase_price
+    # An already-owned vehicle must be depreciated from its current market
+    # value, not from its historic purchase price.
+    if already_owned and vehicle.current_value > 0:
+        current_market_val = vehicle.current_value
+    else:
+        current_market_val = vehicle.purchase_price
 
     for y in range(1, ownership.horizon_years + 1):
         if vehicle.is_ev:

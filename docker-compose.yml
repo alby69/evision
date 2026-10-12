@@ -32,6 +32,8 @@ services:
       ENVIRONMENT: production
       CORS_ORIGINS: "*"
       EV_CATALOG_API_KEY: ${EV_CATALOG_API_KEY:-}
+      CAR_CATALOG_API_KEY: ${CAR_CATALOG_API_KEY:-}
+      RAPIDAPI_API_KEY: ${RAPIDAPI_API_KEY:-}
     ports:
       - "8000:8000"
     depends_on:

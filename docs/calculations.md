@@ -20,7 +20,13 @@ $$\text{TCO}(y) = \text{Net Purchase Cost} + \sum_{i=1}^{y} (\text{Energy/Fuel C
 
 Where:
 * $\text{Net Purchase Cost} = \text{Gross Purchase Price} - \text{Incentives} - \text{Trade-in Value}$
-* $\text{Residual Value}(y) = \text{Purchase Price} \times \text{Depreciation Curve}(y)$
+* $\text{Residual Value}(y) = \text{Depreciation Base} \times \text{Depreciation Curve}(y)$
+
+**Already-owned current vehicle.** In a keep-vs-switch comparison the current car is already in the owner's possession, so `calculate_vehicle_tco(..., already_owned=True)` applies two corrections:
+* $\text{Net Purchase Cost} = 0$ — the acquisition price is a sunk cost and must not be counted as an upfront outlay (otherwise the trade-in value is credited to both cars and cancels out, and the price gap collapses to an implausibly small break-even).
+* $\text{Depreciation Base} = \text{Current Market Value}$ (falling back to the purchase price when the market value is unknown) instead of the historic purchase price.
+
+The incremental upfront investment is therefore the candidate's net purchase cost.
 
 ---
 
