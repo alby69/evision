@@ -56,6 +56,34 @@ const fromPercent = (pct: number) => clamp(pct, 0, 100) / 100;
 const splitSum = (...values: number[]) => values.reduce((acc, v) => acc + v, 0);
 const isFull = (sumDec: number) => Math.abs(sumDec - 1) < 0.005;
 
+const autoFillThird = (
+  city: number,
+  extraurban: number,
+  highway: number,
+  changedField: 'city' | 'extraurban' | 'highway',
+  newValue: number
+): { city: number; extraurban: number; highway: number } => {
+  const values = { city, extraurban, highway };
+  values[changedField] = newValue;
+  const nonZeroKeys = (Object.keys(values) as Array<keyof typeof values>).filter(
+    (k) => values[k] > 0
+  );
+  if (nonZeroKeys.length === 2) {
+    const [a, b] = nonZeroKeys;
+    const sum = values[a] + values[b];
+    if (sum < 1) {
+      const thirdMap: Record<'city' | 'extraurban' | 'highway', 'city' | 'extraurban' | 'highway'> = {
+        city: 'extraurban',
+        extraurban: 'highway',
+        highway: 'city',
+      };
+      const third = thirdMap[changedField];
+      values[third] = 1 - sum;
+    }
+  }
+  return values;
+};
+
 const FUEL_MAP: Record<string, { fuel: FuelType; type: VehicleType }> = {
   gasoline: { fuel: FuelType.PETROL, type: VehicleType.PETROL },
   gas: { fuel: FuelType.PETROL, type: VehicleType.PETROL },
@@ -671,17 +699,44 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
                     <PercentInput
                       label="Urbano"
                       value={usage.city_percentage}
-                      onChange={(v) => setUsage({ ...usage, city_percentage: v })}
+                      onChange={(v) => {
+                        const updated = autoFillThird(
+                          usage.city_percentage,
+                          usage.extraurban_percentage,
+                          usage.highway_percentage,
+                          'city',
+                          v
+                        );
+                        setUsage({ ...usage, ...updated });
+                      }}
                     />
                     <PercentInput
                       label="Extraurbano"
                       value={usage.extraurban_percentage}
-                      onChange={(v) => setUsage({ ...usage, extraurban_percentage: v })}
+                      onChange={(v) => {
+                        const updated = autoFillThird(
+                          usage.city_percentage,
+                          usage.extraurban_percentage,
+                          usage.highway_percentage,
+                          'extraurban',
+                          v
+                        );
+                        setUsage({ ...usage, ...updated });
+                      }}
                     />
                     <PercentInput
                       label="Autostrada"
                       value={usage.highway_percentage}
-                      onChange={(v) => setUsage({ ...usage, highway_percentage: v })}
+                      onChange={(v) => {
+                        const updated = autoFillThird(
+                          usage.city_percentage,
+                          usage.extraurban_percentage,
+                          usage.highway_percentage,
+                          'highway',
+                          v
+                        );
+                        setUsage({ ...usage, ...updated });
+                      }}
                     />
                   </div>
                 </div>
