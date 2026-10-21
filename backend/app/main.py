@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.analyses import router as analyses_router
 from app.api.v1.calculations import router as calculations_router
+from app.api.v1.prices import router as prices_router
 from app.api.v1.vehicles import router as vehicles_router
 from app.core.config import settings
 
@@ -26,6 +27,7 @@ app.add_middleware(
 app.include_router(vehicles_router, prefix="/api/v1")
 app.include_router(calculations_router, prefix="/api/v1")
 app.include_router(analyses_router, prefix="/api/v1")
+app.include_router(prices_router, prefix="/api/v1")
 
 @app.get("/")
 def health_check():

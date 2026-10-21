@@ -2,8 +2,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import { FullAnalysisResponse, ValueExplanation } from './types/api';
 import { fetchDemoAnalysis, createAnalysis, fetchAnalysisById } from './services/api';
 import { RecommendationBadge } from './components/RecommendationBadge';
-import { AnalysisCharts } from './components/AnalysisCharts';
 import { ScenarioInsights } from './components/ScenarioInsights';
+
+const AnalysisCharts = React.lazy(() => import('./components/AnalysisCharts'));
+
+const AnalysisChartsSkeleton: React.FC = () => (
+  <Card className="p-6 space-y-6 animate-pulse">
+    <div className="h-6 w-1/3 rounded-md bg-muted" />
+    <div className="h-64 w-full rounded-xl bg-muted/60" />
+  </Card>
+);
 import { AnalysisWizard, AnalysisPayload } from './components/AnalysisWizard';
 import { Card, StatCard, SectionHeader, Chip, ThemeToggle, InfoHint } from './components/ui';
 import {
@@ -67,17 +75,6 @@ export const App: React.FC = () => {
 
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const analysisId = params.get('id');
-    if (analysisId) {
-      loadSavedAnalysis(analysisId);
-    } else {
-      loadDemoAnalysis();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const loadDemoAnalysis = async () => {
     setLoading(true);
     setError(null);
@@ -109,6 +106,16 @@ export const App: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const analysisId = params.get('id');
+    if (analysisId) {
+      loadSavedAnalysis(analysisId);
+    } else {
+      loadDemoAnalysis();
+    }
+  }, []);
 
   const handleRetry = () => {
     if (source === 'saved' && savedId) loadSavedAnalysis(savedId);
@@ -429,7 +436,9 @@ export const App: React.FC = () => {
             </div>
 
             {/* Charts */}
-            <AnalysisCharts analysis={analysis} />
+            <React.Suspense fallback={<AnalysisChartsSkeleton />}>
+              <AnalysisCharts analysis={analysis} />
+            </React.Suspense>
 
             {/* Data transparency */}
             <Card className="p-5">

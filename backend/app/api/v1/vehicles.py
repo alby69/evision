@@ -6,12 +6,15 @@ from app.schemas.api_schemas import (
     CarCatalogItem,
     CarFacetValue,
     EVCatalogItem,
+    ParsedListingRequest,
+    ParsedListingResponse,
     VehicleValuationRequest,
     VehicleValuationResponse,
 )
 from app.services.car_catalog_service import get_car_facets as get_car_facets_data
 from app.services.car_catalog_service import search_cars
 from app.services.ev_catalog_service import search_ev_catalog
+from app.services.listing_parser_service import parse_listing_url
 from app.services.valuation_service import ValuationUnavailable, estimate_vehicle_value
 
 router = APIRouter(prefix="/vehicles", tags=["Vehicles"])
@@ -89,6 +92,17 @@ async def list_cars(
     Searches conventional cars by make/model (API Ninjas /v1/cars, available on the free tier).
     """
     return await search_cars(make=make, model=model, year=year, fuel_type=fuel_type)
+
+
+@router.post("/parse-listing", response_model=ParsedListingResponse)
+async def parse_vehicle_listing(request: ParsedListingRequest) -> ParsedListingResponse:
+    """
+    Parses a vehicle listing URL (AutoScout24, Subito, etc.) and extracts make, model, year, price, and mileage.
+    """
+    try:
+        return await parse_listing_url(request.url)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.post("/valuation", response_model=VehicleValuationResponse)

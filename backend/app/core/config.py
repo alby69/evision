@@ -24,6 +24,14 @@ class Settings(BaseSettings):
     RAPIDAPI_AS24_URL: str = "https://autoscout24-scraper.p.rapidapi.com/get_page_source"
     AUTOSCOUT24_BASE_URL: str = "https://www.autoscout24.it"
 
+    # Live Energy & Fuel Price Feeds (MISE / MIMIT Open Data API & Fallbacks)
+    MISE_FUEL_PRICES_API_URL: str = "https://www.mimit.gov.it/images/exportopenData/prezzi_alle_pompe.csv"
+    DEFAULT_DIESEL_PRICE: float = 1.80
+    DEFAULT_PETROL_PRICE: float = 1.85
+    DEFAULT_LPG_PRICE: float = 0.75
+    DEFAULT_CNG_PRICE: float = 1.35
+    DEFAULT_ELECTRICITY_HOME_PRICE: float = 0.25
+
     class Config:
         env_file = ".env"
         extra = "ignore"
