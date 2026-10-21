@@ -34,6 +34,21 @@ class CarFacetValue(BaseModel):
     count: int
 
 
+class ParsedListingRequest(BaseModel):
+    url: str = Field(min_length=1, description="URL of the vehicle listing (AutoScout24, Subito, etc.)")
+
+
+class ParsedListingResponse(BaseModel):
+    url: str
+    make: str
+    model: str
+    year: int | None = None
+    price_eur: float | None = None
+    mileage_km: int | None = None
+    fuel_type: str | None = None
+    raw_title: str | None = None
+
+
 class CarCatalogItem(BaseModel):
     make: str
     model: str

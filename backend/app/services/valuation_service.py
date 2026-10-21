@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 
 import httpx
 
+from app.core.cache import global_cache
 from app.core.config import settings
 from app.schemas.api_schemas import (
     ValuationComparable,
@@ -170,13 +171,7 @@ def _match_fuel(listing_fuel: str, requested_fuel: str | None) -> bool:
     return listing_fuel in codes
 
 
-async def estimate_vehicle_value(request: VehicleValuationRequest) -> VehicleValuationResponse:
-    """Estimates a used-car value from comparable AutoScout24.it listings via RapidAPI.
-
-    Fetches the AutoScout24 search page (scrapeunblocker scraper) and computes the robust
-    median of asking prices for the same make/model/year, pre-filtered by mileage
-    proximity when the odometer is known.
-    """
+async def _estimate_vehicle_value_uncached(request: VehicleValuationRequest) -> VehicleValuationResponse:
     api_key = settings.RAPIDAPI_API_KEY.strip()
     if not api_key:
         raise ValuationUnavailable("Stima non disponibile: configurare RAPIDAPI_API_KEY.")
@@ -275,3 +270,8 @@ async def estimate_vehicle_value(request: VehicleValuationRequest) -> VehicleVal
         confidence=_confidence(len(values)),
         comparables=comparables,
     )
+
+
+async def estimate_vehicle_value(request: VehicleValuationRequest) -> VehicleValuationResponse:
+    """Estimates a used-car value from comparable AutoScout24.it listings via RapidAPI with caching."""
+    return await global_cache.get_or_call("valuation", _estimate_vehicle_value_uncached, request)

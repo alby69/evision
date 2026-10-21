@@ -2,6 +2,7 @@ import logging
 
 import httpx
 
+from app.core.cache import global_cache
 from app.core.config import settings
 from app.schemas.api_schemas import CarCatalogItem, CarFacetValue
 from app.services.numeric_utils import parse_int, parse_number
@@ -155,7 +156,7 @@ def _parse_cars(data: object) -> list[CarCatalogItem]:
     return items
 
 
-async def get_car_facets(
+async def _get_car_facets_uncached(
     facets: list[str],
     make: str | None = None,
     model: str | None = None,
@@ -207,6 +208,33 @@ async def get_car_facets(
         return _mock_facets(selected, make=make, model=model)
 
 
+async def get_car_facets(
+    facets: list[str],
+    make: str | None = None,
+    model: str | None = None,
+    generation: str | None = None,
+    body: str | None = None,
+    fuel: str | None = None,
+    transmission: str | None = None,
+    drive: str | None = None,
+    year: int | None = None,
+) -> dict[str, list[CarFacetValue]]:
+    """Returns available values and counts for requested catalog dimensions with caching."""
+    return await global_cache.get_or_call(
+        "car_facets",
+        _get_car_facets_uncached,
+        facets=facets,
+        make=make,
+        model=model,
+        generation=generation,
+        body=body,
+        fuel=fuel,
+        transmission=transmission,
+        drive=drive,
+        year=year,
+    )
+
+
 def _mock_cars(
     make: str,
     model: str,
@@ -225,17 +253,12 @@ def _mock_cars(
     return results
 
 
-async def search_cars(
+async def _search_cars_uncached(
     make: str,
     model: str,
     year: int | None = None,
     fuel_type: str | None = None,
 ) -> list[CarCatalogItem]:
-    """Searches conventional cars by make/model (and optional year/fuel).
-
-    Uses the API Ninjas /v1/cars endpoint, which is available on the free tier,
-    and falls back to a small local dataset when no API key is configured.
-    """
     if not make or not model:
         return []
 
@@ -264,3 +287,20 @@ async def search_cars(
     except Exception as exc:  # noqa: BLE001
         logger.warning("Car catalog API request failed, using mock data fallback: %s", exc)
         return _mock_cars(make, model, year=year, fuel_type=fuel_type)
+
+
+async def search_cars(
+    make: str,
+    model: str,
+    year: int | None = None,
+    fuel_type: str | None = None,
+) -> list[CarCatalogItem]:
+    """Searches conventional cars by make/model with caching."""
+    return await global_cache.get_or_call(
+        "search_cars",
+        _search_cars_uncached,
+        make=make,
+        model=model,
+        year=year,
+        fuel_type=fuel_type,
+    )
