@@ -94,18 +94,22 @@ def generate_decision_recommendation(
 
     # Determine Rating
     confidence = 0.85
-    if savings > Decimal(4000) and (op_be_years is not None and op_be_years <= horizon * 0.75):
+    tot_be_years = break_even.total_ownership_break_even_years
+    be_candidates = [y for y in (tot_be_years, op_be_years) if y is not None]
+    be_years = min(be_candidates) if be_candidates else None
+
+    if savings > Decimal(4000) and (be_years is not None and be_years <= horizon * 0.75):
         rating = RecommendationRating.STRONG_BUY
         summary = (
             f"Fortemente consigliato! Sostituire {current_vehicle.brand} {current_vehicle.model} con "
             f"{candidate_vehicle.brand} {candidate_vehicle.model} dovrebbe far risparmiare {_format_eur(savings)} "
-            f"in {horizon} anni. Il break-even si raggiunge in circa {_format_duration(op_be_years)}."
+            f"in {horizon} anni. Il break-even si raggiunge in circa {_format_duration(be_years)}."
         )
-    elif savings > Decimal(1000) and (op_be_years is not None and op_be_years <= horizon):
+    elif savings > Decimal(1000) and (be_years is not None and be_years <= horizon):
         rating = RecommendationRating.BUY
         summary = (
             f"Decisione finanziariamente vantaggiosa. Il passaggio fa risparmiare circa {_format_eur(savings)} "
-            f"in {horizon} anni, con break-even raggiunto in circa {_format_duration(op_be_years)}."
+            f"in {horizon} anni, con break-even raggiunto in circa {_format_duration(be_years)}."
         )
     elif savings >= Decimal(-1000) and savings <= Decimal(1000):
         rating = RecommendationRating.MAYBE
