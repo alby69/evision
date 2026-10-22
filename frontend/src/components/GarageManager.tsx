@@ -326,7 +326,11 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                       ))}
                     </SelectInput>
                   </Field>
-                  <Field label="Prezzo acquisto (€)" htmlFor="gv-price">
+                  <Field
+                    label="Prezzo acquisto (€) *"
+                    htmlFor="gv-price"
+                    hint="Prezzo effettivamente pagato all'acquisto (o valore di mercato al momento dell'acquisto/permuta)."
+                  >
                     <NumberInput
                       id="gv-price"
                       min={0.1}
