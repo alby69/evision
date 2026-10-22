@@ -38,6 +38,17 @@ Questo documento traccia l'evoluzione del progetto, con dettagli tecnici e crite
 ## ✅ MVP (v0.1) - Initial Release (COMPLETATO)
 - [x] Pure Python Calculation Engine, Recommendation Engine, FastAPI, React frontend.
 
+## 🔄 Roadmap Modulo Garage - eVision
+
+| ID | Feature / Task | Descrizione | Priorità | Stato |
+|----|----------------|-------------|----------|-------|
+| **R1** | **Fix Semantico Garage** | Correggere `TYPE_OPTIONS` per usare "Categoria Veicolo" (Auto, SUV, ecc.) invece di duplicare l'alimentazione. | 🔴 Alta | 📝 Da Implementare |
+| **R2** | **Validazione Consumi** | Impostare `min={0.1}` sui campi di consumo per prevenire errori di divisione per zero nel motore TCO. | 🔴 Alta | 📝 Da Implementare |
+| **R3** | **UI Dinamica Consumi** | Aggiornare le etichette dei consumi per mostrare dinamicamente "L/100km" o "kWh/100km" in base all'alimentazione. | 🟡 Media | 📝 Da Implementare |
+| **R4** | **Campi EV nel Garage** | Aggiungere i campi condizionali "Capacità batteria (kWh)" e "Autonomia WLTP (km)" nel form di inserimento. | 🟡 Media | 📝 Da Implementare |
+| **R5** | **Integrazione Prezzi Carburante** | Collegare il profilo carburante globale (`FuelProfile`) al veicolo salvato, permettendo all'utente di sovrascrivere il prezzo predefinito per quel veicolo specifico. | 🟢 Bassa | 🗺️ In Backlog |
+| **R6** | **Stima Automatica Valore** | Estendere l'API di valutazione AutoScout24 per aggiornare automaticamente il `current_value` dei veicoli già presenti nel Garage con un pulsante "Aggiorna quotazione". | 🟢 Bassa | 🗺️ In Backlog |
+
 ## 🔜 v0.5 - AI Advisor Integration
 - [ ] **LLM-Assisted Explanation**: Generazione di spiegazioni in linguaggio naturale ("Perché ha senso", "A cosa fare attenzione").
 - [ ] **Chat-like Q&A**: Interfaccia chat per porre domande sull'analisi generata.
