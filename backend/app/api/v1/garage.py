@@ -37,13 +37,22 @@ def _to_response(sv: Any) -> SavedVehicleResponse:
 @router.get("", response_model=list[SavedVehicleResponse])
 async def list_garage_vehicles(db: AsyncSession = Depends(get_db)) -> list[SavedVehicleResponse]:
     """Retrieves all saved vehicles from the user's garage."""
+    db_vehicles: list[SavedVehicleResponse] = []
     try:
         stmt = select(SavedVehicle).order_by(SavedVehicle.is_default.desc(), SavedVehicle.created_at.desc())
         result = await db.execute(stmt)
         vehicles = result.scalars().all()
-        return [_to_response(v) for v in vehicles]
+        db_vehicles = [_to_response(v) for v in vehicles]
     except Exception:
-        return [_to_response(v) for v in _in_memory_garage.values()]
+        pass
+
+    db_ids = {v.id for v in db_vehicles}
+    memory_vehicles = [
+        _to_response(v) for v in _in_memory_garage.values() if v["id"] not in db_ids
+    ]
+    all_vehicles = db_vehicles + memory_vehicles
+    all_vehicles.sort(key=lambda x: (x.is_default, x.created_at), reverse=True)
+    return all_vehicles
 
 
 @router.post("", response_model=SavedVehicleResponse, status_code=201)
