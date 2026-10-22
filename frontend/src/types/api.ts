@@ -248,6 +248,13 @@ export interface SensitivityFactor {
   impact_description: string;
 }
 
+export interface RedFlag {
+  code: string;
+  severity: 'WARNING' | 'DANGER' | 'CRITICAL';
+  title: string;
+  description: string;
+}
+
 export interface ValueExplanation {
   value: string;
   formula: string;
@@ -264,6 +271,16 @@ export interface DecisionRecommendation {
   key_advantages: string[];
   cautions_and_risks: string[];
   explanations: ValueExplanation[];
+  red_flags?: RedFlag[];
+  weighted_score?: number;
+}
+
+export interface AIExplainResponse {
+  ai_summary: string;
+}
+
+export interface QnAnessResponse {
+  answer: string;
 }
 
 export interface FullAnalysisResponse {
