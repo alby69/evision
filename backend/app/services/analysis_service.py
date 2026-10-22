@@ -23,12 +23,6 @@ from app.domain.models.usage import UsageProfile
 from app.domain.models.vehicle import Vehicle
 
 
-class AnalysisRequest(Vehicle):
-    pass
-
-class FullAnalysisPayload:
-    pass
-
 def run_full_analysis(
     current_vehicle: Vehicle,
     candidate_vehicle: Vehicle,
@@ -64,4 +58,53 @@ def run_full_analysis(
         "scenarios": scenarios,
         "sensitivity": sensitivity,
         "recommendation": rec,
+    }
+
+
+def run_comparative_analysis(
+    current_vehicle: Vehicle,
+    candidate_vehicles: list[Vehicle],
+    usage: UsageProfile,
+    charging: ChargingProfile,
+    fuel: FuelProfile,
+    ownership: OwnershipScenario,
+) -> dict[str, Any]:
+    curr_tco: VehicleTCOResult = calculate_vehicle_tco(
+        current_vehicle, usage, charging, fuel, ownership, already_owned=True
+    )
+
+    comparisons: list[dict[str, Any]] = []
+
+    for cand in candidate_vehicles:
+        cand_tco: VehicleTCOResult = calculate_vehicle_tco(cand, usage, charging, fuel, ownership)
+        be: BreakEvenResult = calculate_break_even(curr_tco, cand_tco, usage.annual_km)
+        cand_range: RealWorldRangeResult = calculate_real_world_range(cand, usage)
+        cand_batt: BatteryDegradationResult = calculate_battery_degradation(
+            cand, usage, ownership.horizon_years
+        )
+        scenarios: ScenarioResult = simulate_scenarios(
+            current_vehicle, cand, usage, charging, fuel, ownership
+        )
+        sensitivity: list[SensitivityFactor] = calculate_sensitivity_factors(
+            current_vehicle, cand, usage, charging, fuel, ownership
+        )
+        rec: DecisionRecommendation = generate_decision_recommendation(
+            current_vehicle, cand, curr_tco, cand_tco, be, usage, charging, fuel, ownership
+        )
+
+        comparisons.append({
+            "candidate_vehicle": cand,
+            "candidate_tco": cand_tco,
+            "break_even": be,
+            "candidate_range": cand_range,
+            "candidate_battery_degradation": cand_batt,
+            "scenarios": scenarios,
+            "sensitivity": sensitivity,
+            "recommendation": rec,
+        })
+
+    return {
+        "current_vehicle": current_vehicle,
+        "current_tco": curr_tco,
+        "comparisons": comparisons,
     }

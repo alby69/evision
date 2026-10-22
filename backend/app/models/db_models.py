@@ -1,8 +1,13 @@
+from datetime import datetime, timezone
 import uuid
 
-from sqlalchemy import JSON, Boolean, Column, Float, Integer, Numeric, String
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, ForeignKey, Integer, Numeric, String
 
 from app.core.database import Base
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class VehicleModel(Base):
@@ -35,6 +40,7 @@ class VehicleModel(Base):
 
     is_demo = Column(Boolean, default=False)
 
+
 class AnalysisModel(Base):
     __tablename__ = "analyses"
 
@@ -47,3 +53,25 @@ class AnalysisModel(Base):
     fuel_profile_data = Column(JSON, nullable=False)
     ownership_scenario_data = Column(JSON, nullable=False)
     analysis_result_data = Column(JSON, nullable=True)
+
+
+class SavedVehicle(Base):
+    __tablename__ = "saved_vehicles"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String, nullable=False)
+    is_default = Column(Boolean, default=False)
+    vehicle_data = Column(JSON, nullable=False)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
+
+
+class SavedAnalysis(Base):
+    __tablename__ = "saved_analyses"
+
+    id = Column(String, primary_key=True)
+    name = Column(String, nullable=True)
+    current_vehicle_id = Column(String, ForeignKey("saved_vehicles.id"), nullable=True)
+    candidate_vehicle_ids = Column(JSON, nullable=False)
+    analysis_result = Column(JSON, nullable=False)
+    created_at = Column(DateTime, default=utc_now)

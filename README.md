@@ -9,13 +9,16 @@ An open-source decision support web application for evaluating the total financi
 ## 🌟 Key Features
 
 * **Authoritative Calculation Engine**: Pure Python domain engine calculating Total Cost of Ownership (TCO), incremental cost, operational vs. total break-even, battery degradation, and real-world range.
+* **My Garage & Persistent History**: Save your reference vehicles permanently in PostgreSQL ("My Garage"), set default vehicles, and retrieve, rename, or delete past saved analyses.
+* **Multi-Car Simultaneous Comparison (1 vs N)**: Compare 1 owned/reference vehicle against up to 5 candidate EVs simultaneously with side-by-side KPI tables and multi-line Recharts TCO cumulative curves.
+* **Live Fuel & Energy Price Integration**: Fetch current regional fuel prices (Petrol, Diesel, LPG, CNG) and home electricity tariffs directly from the MIMIT (Osservaprezzi Carburanti) Open Data feed or configure them manually.
 * **Smart Recommendation Engine**: Produces actionable, interpretable guidance (`STRONG_BUY`, `BUY`, `MAYBE`, `KEEP_CURRENT`, `AVOID`) with confidence levels, risk scores (0-100), and "Why it makes sense" / "Cautions" explanations.
 * **Facts vs. Assumptions Transparency**: Explicit source tagging (`FACT`, `USER_INPUT`, `ESTIMATE`, `ASSUMPTION`) for every parameter and math breakdown.
-* **Interactive Guided Wizard**: Accessible 5-step modal wizard (focus trap, Escape, clickable stepper, per-step validation) to enter current car, usage profile, candidate EV (with live catalog search), energy costs, maintenance/insurance/taxes, financing, and horizon.
+* **Interactive Guided Wizard**: Accessible 5-step modal wizard (focus trap, Escape, clickable stepper, per-step validation) to enter current car, usage profile, candidate EVs (with live catalog search), energy/fuel costs, maintenance/insurance/taxes, financing, and horizon.
 * **Live Vehicle Catalogs**: Candidate EVs are searched against the bundled **OpenEV Data** dataset (offline, ~490 variants) topped up with a curated demo catalog and API Ninjas as a last resort; conventional (ICE) cars use the API Ninjas free-tier lookup and cascading facets.
 * **Used-Car Valuation**: Optional on-demand market/trade-in estimate for the current car from comparable **AutoScout24.it** listings (RapidAPI "AutoScout24 Scraper"), auto-filled when a car is selected or triggered manually with `POST /api/v1/vehicles/valuation`.
 * **Scenario & Sensitivity Simulator**: Pessimistic / Base / Optimistic scenario comparison (TCO, break-even, savings) plus a parameter sensitivity ranking with impact bars.
-* **Modern Visualization**: Recharts charts for cumulative TCO curves, cost breakdown donut, real-world range vs. WLTP, and battery degradation over time.
+* **Modern Visualization**: Recharts charts for multi-car cumulative TCO curves, cost breakdown donut, real-world range vs. WLTP, and battery degradation over time.
 * **Polished UI/UX**: Reusable design system (cards, chips, stats, form fields), light & dark theme with persistence, entrance animations, loading/error states with retry, progress bar, and shareable analysis links (`?id=...`) with PDF export via print stylesheet.
 * **Accessible & Responsive**: WCAG AA color contrast verified in both themes, keyboard navigation, ARIA labelling, touch targets ≥ 40 px, and no horizontal overflow from 360 px to 1920 px.
 * **API-First & CLI Ready**: REST API built with FastAPI and OpenAPI auto-generated documentation, plus a standalone CLI tool.
@@ -48,7 +51,7 @@ An open-source decision support web application for evaluating the total financi
                                │
                     ┌──────────▼──────────┐
                     │      Database       │
-                    │    PostgreSQL       │
+                    │  PostgreSQL / DB    │
                     └─────────────────────┘
 ```
 
@@ -63,11 +66,14 @@ frontend/
 ├── tailwind.config.js          # Design tokens (HSL), animations, shadows
 ├── public/favicon.svg
 └── src/
-    ├── App.tsx                 # Shell: header, hero verdict, KPIs, transparency, footer
+    ├── App.tsx                 # Shell: header, garage manager, history modal, verdict hero, KPIs
     ├── index.css               # Theme tokens, `.btn`/`.field-*`/`.card-panel` components, print styles
     ├── components/
     │   ├── ui.tsx              # Primitives: Card, StatCard, Chip, Field, RangeSlider, ThemeToggle…
-    │   ├── AnalysisWizard.tsx  # 5-step accessible modal wizard
+    │   ├── AnalysisWizard.tsx  # 5-step accessible modal wizard with fuel price controls
+    │   ├── GarageManager.tsx   # My Garage modal drawer (CRUD, default vehicle selection)
+    │   ├── MultiCarSelector.tsx# Multi-car EV selection component (1-5 candidates)
+    │   ├── ComparativeAnalysisView.tsx # Side-by-side KPI table and multi-line Recharts TCO chart
     │   ├── AnalysisCharts.tsx  # TCO, donut, range, battery degradation charts
     │   ├── ScenarioInsights.tsx# Pessimistic/Base/Optimistic scenarios + sensitivity bars
     │   ├── RecommendationBadge.tsx
@@ -101,29 +107,6 @@ Access the services:
 * **Frontend Application**: `http://localhost:5173`
 * **FastAPI Backend & Interactive API Docs**: `http://localhost:8000/docs`
 
-### Configuration
-
-Copy `.env.example` to `.env` and fill in the values:
-
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string. |
-| `EV_DATASET_PATH` | Path to the bundled OpenEV Data CSV used as the primary, offline EV catalog (default: `data/open-ev-data.csv`). |
-| `EV_CATALOG_API_KEY` | API key for the external EV catalog (API Ninjas). Now only a last-resort fallback used when neither the dataset nor the curated demo catalog match. Leave empty to rely on the dataset alone. |
-| `EV_CATALOG_API_URL` | Catalog endpoint URL (default: `https://api.api-ninjas.com/v1/electricvehicle`). |
-| `CAR_CATALOG_API_KEY` | API key for conventional (ICE) car selection. Falls back to `EV_CATALOG_API_KEY` when empty. |
-| `CAR_FACETS_API_URL` | Cascading dropdown endpoint (default: `https://api.api-ninjas.com/v2/carfacets`, free tier). |
-| `CAR_CATALOG_API_URL` | Conventional car lookup endpoint (default: `https://api.api-ninjas.com/v1/cars`, free tier). |
-| `RAPIDAPI_API_KEY` | API key for the used-car valuation estimate (`POST /api/v1/vehicles/valuation`) via RapidAPI's "AutoScout24 Scraper". Leave empty to disable the "Stima valore" button. |
-| `RAPIDAPI_AS24_URL` | RapidAPI scraper endpoint (default: `https://autoscout24-scraper.p.rapidapi.com/get_page_source`). |
-| `AUTOSCOUT24_BASE_URL` | Marketplace used to build the search page (default: `https://www.autoscout24.it`). |
-
-Where to put the key (both files are **gitignored**):
-* **Docker Compose**: root `.env` — compose interpolates it and passes `EV_CATALOG_API_KEY` to the backend container. Recreate the container after changing it: `docker compose up -d backend`.
-* **Local backend** (`cd backend && uv run uvicorn ...`): `backend/.env` (pydantic-settings reads `.env` from the working directory).
-
-> ⚠️ Never commit real API keys: `.env` / `backend/.env` are ignored; `.env.example` must keep the `your_api_key_here` placeholder.
-
 ---
 
 ## 🧪 Testing
@@ -131,18 +114,15 @@ Where to put the key (both files are **gitignored**):
 ### Backend Tests
 ```bash
 cd backend
-python -m pytest
+uv run pytest
 ```
 
 ### Frontend Tests
 ```bash
 cd frontend
 npm test            # unit tests (Vitest)
-npx tsc --noEmit    # type check
-npm run build       # production build (includes Tailwind/PostCSS pipeline)
+npm run build       # production build
 ```
-
-> Note: `npm run lint` requires ESLint, which is not yet configured in this repository.
 
 ---
 
