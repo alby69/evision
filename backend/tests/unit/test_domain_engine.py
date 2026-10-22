@@ -199,3 +199,82 @@ def test_scenarios_and_recommendation(current_diesel_car, candidate_zoe_ev, usag
     )
     assert rec.rating in ["STRONG_BUY", "BUY", "MAYBE", "KEEP_CURRENT", "AVOID"]
     assert 0 <= rec.risk_score <= 100
+
+
+def test_recommendation_total_ownership_break_even_duster_vs_b10():
+    duster = Vehicle(
+        id="duster",
+        brand="Dacia",
+        model="Duster",
+        version="1.5 dCi",
+        year=2019,
+        vehicle_type=VehicleType.DIESEL,
+        fuel_type=FuelType.DIESEL,
+        purchase_price=Decimal("20000"),
+        current_value=Decimal("10000"),
+        annual_tax=Decimal("220"),
+        urban_consumption=5.5,
+        extraurban_consumption=4.5,
+        highway_consumption=6.0,
+        maintenance_cost_per_year=Decimal("600"),
+        insurance_cost_per_year=Decimal("500"),
+        tire_cost_per_year=Decimal("200"),
+    )
+    b10 = Vehicle(
+        id="b10",
+        brand="Leapmotor",
+        model="B10",
+        version="Standard",
+        year=2025,
+        vehicle_type=VehicleType.BEV,
+        fuel_type=FuelType.ELECTRICITY,
+        purchase_price=Decimal("30000"),
+        current_value=Decimal("0"),
+        annual_tax=Decimal("0"),
+        urban_consumption=14.0,
+        extraurban_consumption=15.0,
+        highway_consumption=19.0,
+        battery_capacity=69.9,
+        usable_battery_capacity=69.9,
+        wltp_range=434,
+        maintenance_cost_per_year=Decimal("250"),
+        insurance_cost_per_year=Decimal("600"),
+        tire_cost_per_year=Decimal("250"),
+    )
+    usage = UsageProfile(
+        annual_km=25000,
+        city_percentage=0.4,
+        extraurban_percentage=0.4,
+        highway_percentage=0.2,
+        winter_multiplier=1.2,
+    )
+    charging = ChargingProfile(
+        home_charging_percentage=0.8,
+        public_ac_charging_percentage=0.1,
+        public_dc_charging_percentage=0.1,
+        home_energy_price=Decimal("0.25"),
+        public_ac_energy_price=Decimal("0.50"),
+        public_dc_energy_price=Decimal("0.65"),
+    )
+    fuel = FuelProfile(
+        diesel_price=Decimal("1.75"),
+        annual_fuel_price_growth=0.02,
+    )
+    ownership = OwnershipScenario(
+        horizon_years=10,
+        trade_in_value=Decimal("10000"),
+        incentive_amount=Decimal("0"),
+    )
+
+    tco_duster = calculate_vehicle_tco(duster, usage, charging, fuel, ownership, already_owned=True)
+    tco_b10 = calculate_vehicle_tco(b10, usage, charging, fuel, ownership, already_owned=False)
+    be = calculate_break_even(tco_duster, tco_b10, usage.annual_km)
+
+    # In this scenario, total ownership break-even is 9 years (<= 10 horizon), while operational break-even is 14.02 years (> 10).
+    assert be.total_ownership_break_even_years == 9.0
+    assert be.operational_break_even_years > 10.0
+    assert be.cumulative_savings_over_horizon > Decimal(1000)
+
+    rec = generate_decision_recommendation(duster, b10, tco_duster, tco_b10, be, usage, charging, fuel, ownership)
+    assert rec.rating in ["BUY", "STRONG_BUY"]
+    assert "break-even" in rec.summary_text
