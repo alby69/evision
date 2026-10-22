@@ -41,15 +41,15 @@ const emptyVehicle: Vehicle = {
   category: VehicleCategory.CAR,
   vehicle_type: VehicleType.PETROL,
   fuel_type: FuelType.PETROL,
-  purchase_price: 0,
-  current_value: 0,
-  annual_tax: 0,
-  urban_consumption: 0,
-  extraurban_consumption: 0,
-  highway_consumption: 0,
-  maintenance_cost_per_year: 0,
-  insurance_cost_per_year: 0,
-  tire_cost_per_year: 0,
+  purchase_price: 15000,
+  current_value: 12000,
+  annual_tax: 150,
+  urban_consumption: 6.5,
+  extraurban_consumption: 5.0,
+  highway_consumption: 6.0,
+  maintenance_cost_per_year: 300,
+  insurance_cost_per_year: 500,
+  tire_cost_per_year: 150,
 };
 
 export const GarageManager: React.FC<GarageManagerProps> = ({
@@ -326,12 +326,18 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                       ))}
                     </SelectInput>
                   </Field>
-                  <Field label="Prezzo acquisto (€)" htmlFor="gv-price">
+                  <Field
+                    label="Prezzo acquisto (€) *"
+                    htmlFor="gv-price"
+                    hint="Prezzo effettivamente pagato all'acquisto (o valore di mercato al momento dell'acquisto/permuta)."
+                  >
                     <NumberInput
                       id="gv-price"
-                      min={0}
+                      min={0.1}
+                      step={100}
                       value={formData.vehicle.purchase_price}
                       onChange={(e) => handleInputChange('purchase_price', Number(e.target.value) || 0)}
+                      required
                     />
                   </Field>
                   <Field label="Valore attuale (€)" htmlFor="gv-value">
