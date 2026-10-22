@@ -42,13 +42,19 @@ Questo documento traccia l'evoluzione del progetto, con dettagli tecnici e crite
 
 | ID | Feature / Task | Descrizione | Priorità | Stato |
 |----|----------------|-------------|----------|-------|
-| **R1** | **Fix Semantico Garage** | Correggere `TYPE_OPTIONS` per usare "Categoria Veicolo" (Auto, SUV, ecc.) invece di duplicare l'alimentazione. | 🔴 Alta | 📝 Da Implementare |
-| **R2** | **Validazione Consumi** | Impostare `min={0.1}` sui campi di consumo per prevenire errori di divisione per zero nel motore TCO. | 🔴 Alta | 📝 Da Implementare |
-| **R3** | **UI Dinamica Consumi** | Aggiornare le etichette dei consumi per mostrare dinamicamente "L/100km" o "kWh/100km" in base all'alimentazione. | 🟡 Media | 📝 Da Implementare |
-| **R4** | **Campi EV nel Garage** | Aggiungere i campi condizionali "Capacità batteria (kWh)" e "Autonomia WLTP (km)" nel form di inserimento. | 🟡 Media | 📝 Da Implementare |
-| **R5** | **Integrazione Prezzi Carburante** | Collegare il profilo carburante globale (`FuelProfile`) al veicolo salvato, permettendo all'utente di sovrascrivere il prezzo predefinito per quel veicolo specifico. | 🟢 Bassa | 🗺️ In Backlog |
-| **R6** | **Stima Automatica Valore** | Estendere l'API di valutazione AutoScout24 per aggiornare automaticamente il `current_value` dei veicoli già presenti nel Garage con un pulsante "Aggiorna quotazione". | 🟢 Bassa | 🗺️ In Backlog |
+| **R1** | **Fix Semantico Garage** | Corretto `TYPE_OPTIONS` per usare "Categoria Veicolo" (Auto, SUV, Furgone, Motociclo) invece di duplicare l'alimentazione. | 🔴 Alta | ✅ Completato |
+| **R2** | **Validazione Consumi** | Aggiunto `min={0.1}` e validazione required sui campi di consumo per prevenire errori di divisione per zero nel motore TCO. | 🔴 Alta | ✅ Completato |
+| **R3** | **UI Dinamica Consumi** | Le etichette dei consumi mostrano dinamicamente "L/100km" o "kWh/100km" in base all'alimentazione. | 🟡 Media | ✅ Completato |
+| **R4** | **Campi EV nel Garage** | Aggiunti campi condizionali "Capacità batteria (kWh)" e "Autonomia WLTP (km)" nel form di inserimento. | 🟡 Media | ✅ Completato |
+| **R5** | **Matrice Punteggio Ponderato** | Permettere all'utente di personalizzare i pesi (Risparmio, Autonomia, Sostenibilità) per il calcolo del "Winner Score". | 🟡 Media | 🗺️ In Backlog (v0.5) |
+| **R6** | **Export PDF Comparativo** | Report PDF dedicato a più colonne per il confronto 1 vs N, con grafici sovrapposti e tabella KPI. | 🟢 Bassa | 🗺️ In Backlog (v0.5) |
 
-## 🔜 v0.5 - AI Advisor Integration
-- [ ] **LLM-Assisted Explanation**: Generazione di spiegazioni in linguaggio naturale ("Perché ha senso", "A cosa fare attenzione").
+## 🔜 v0.5 - AI Advisor & Reportistica Avanzata
+
+_Periodo stimato: Q1 2027_
+_Obiettivo: Trasformare i dati grezzi in narrazioni decisionali chiare e automatizzare la reportistica._
+
+- [ ] **LLM-Assisted Comparative Summary**: Generazione di un paragrafo in linguaggio naturale che spiega *perché* l'auto X è migliore dell'auto Y per lo specifico utente (`ai_summary_placeholder` predisposto nello schema API).
+- [ ] **Export PDF Comparativo**: Layout PDF ottimizzato per la stampa a due colonne con grafici Recharts esportati in SVG.
+- [ ] **Alert di Soglia (Red Flags)**: Evidenziazione visiva automatica nei risultati di parametri fuori dagli intervalli di sicurezza (es. break-even > 5 anni).
 - [ ] **Chat-like Q&A**: Interfaccia chat per porre domande sull'analisi generata.

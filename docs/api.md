@@ -24,7 +24,7 @@ Interactive documentation is available at `http://localhost:8000/docs`.
 
 ### Calculations & Analyses (`/api/v1/analyses`)
 * `POST /api/v1/analyses`: Execute single-car decision analysis and persist it to PostgreSQL (`SavedAnalysis`), returning a `FullAnalysisResponse` with ID `analysis-XXXXXXXX`.
-* `POST /api/v1/analyses/compare`: **Multi-Car Simultaneous Comparison (1 vs N)**: Execute decision analysis comparing 1 reference vehicle against up to 5 EV candidates simultaneously. Returns `ComparativeAnalysisResponse` containing parallel TCO, break-even, range, degradation, scenarios, and recommendation breakdowns for each candidate.
+* `POST /api/v1/analyses/compare`: **Multi-Car Simultaneous Comparison (1 vs N)**: Execute decision analysis comparing 1 reference vehicle against up to 5 EV candidates simultaneously. Returns `ComparativeAnalysisResponse` containing parallel TCO, break-even, range, degradation, scenarios, and recommendation breakdowns for each candidate (includes optional `ai_summary_placeholder` field for v0.5 LLM summaries).
 * `GET /api/v1/analyses`: List saved analyses summaries (`id`, `title`, `current_vehicle_name`, `candidate_count`, `created_at`).
 * `GET /api/v1/analyses/demo`: Fetch ready-to-run demo analysis scenario (Honda CR-V vs. Renault Zoe).
 * `GET /api/v1/analyses/{analysis_id}`: Retrieve a saved analysis by ID (single or comparative).

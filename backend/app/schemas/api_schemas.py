@@ -192,6 +192,7 @@ class ComparativeAnalysisResponse(BaseModel):
     ownership: OwnershipScenario
     comparisons: list[CandidateComparison]
     created_at: str | None = None
+    ai_summary_placeholder: str | None = Field(default=None, description="Placeholder for future LLM-generated comparative summary")
 
 
 class SavedAnalysisSummary(BaseModel):

@@ -26,8 +26,12 @@ const CATEGORY_OPTIONS = [
   { value: VehicleCategory.MOTORCYCLE, label: 'Motociclo' },
 ];
 
-const getConsumptionUnit = (fuelType: FuelType, vehicleType: VehicleType) => {
-  if (fuelType === FuelType.ELECTRICITY || vehicleType === VehicleType.BEV) {
+export const getConsumptionUnit = (fuelType: FuelType, vehicleType: VehicleType) => {
+  if (
+    fuelType === FuelType.ELECTRICITY ||
+    vehicleType === VehicleType.BEV ||
+    vehicleType === VehicleType.PHEV
+  ) {
     return 'kWh/100km';
   }
   return 'L/100km';
@@ -88,6 +92,14 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (
+      formData.vehicle.urban_consumption < 0.1 ||
+      formData.vehicle.extraurban_consumption < 0.1 ||
+      formData.vehicle.highway_consumption < 0.1
+    ) {
+      alert('I valori di consumo devono essere maggiori o uguali a 0.1 per evitare errori di calcolo.');
+      return;
+    }
     setLoading(true);
     try {
       if (editingId) {
@@ -358,36 +370,39 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                       onChange={(e) => handleInputChange('annual_tax', Number(e.target.value) || 0)}
                     />
                   </Field>
-                  <Field label={`Consumo urbano (${consumptionUnit})`} htmlFor="gv-urban">
+                  <Field label={`Consumo urbano (${consumptionUnit}) *`} htmlFor="gv-urban">
                     <NumberInput
                       id="gv-urban"
-                      min={0.01}
+                      min={0.1}
                       step="any"
                       value={formData.vehicle.urban_consumption}
                       onChange={(e) => handleInputChange('urban_consumption', Number(e.target.value) || 0)}
+                      required
                     />
                   </Field>
-                  <Field label={`Consumo extraurbano (${consumptionUnit})`} htmlFor="gv-extra">
+                  <Field label={`Consumo extraurbano (${consumptionUnit}) *`} htmlFor="gv-extra">
                     <NumberInput
                       id="gv-extra"
-                      min={0.01}
+                      min={0.1}
                       step="any"
                       value={formData.vehicle.extraurban_consumption}
                       onChange={(e) => handleInputChange('extraurban_consumption', Number(e.target.value) || 0)}
+                      required
                     />
                   </Field>
-                  <Field label={`Consumo autostrada (${consumptionUnit})`} htmlFor="gv-highway">
+                  <Field label={`Consumo autostrada (${consumptionUnit}) *`} htmlFor="gv-highway">
                     <NumberInput
                       id="gv-highway"
-                      min={0.01}
+                      min={0.1}
                       step="any"
                       value={formData.vehicle.highway_consumption}
                       onChange={(e) => handleInputChange('highway_consumption', Number(e.target.value) || 0)}
+                      required
                     />
                   </Field>
                   {isEV && (
                     <>
-                      <Field label="Capacità batteria lorda (kWh)" htmlFor="gv-battery">
+                      <Field label="Capacità batteria (kWh)" htmlFor="gv-battery">
                         <NumberInput
                           id="gv-battery"
                           min={0}
@@ -396,7 +411,7 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                           onChange={(e) => handleInputChange('battery_capacity', Number(e.target.value) || 0)}
                         />
                       </Field>
-                      <Field label="Autonomia WLTP dichiarata (km)" htmlFor="gv-wltp">
+                      <Field label="Autonomia WLTP (km)" htmlFor="gv-wltp">
                         <NumberInput
                           id="gv-wltp"
                           min={0}

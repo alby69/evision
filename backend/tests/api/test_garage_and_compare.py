@@ -76,6 +76,7 @@ def test_comparative_analysis_endpoint():
     assert res.status_code == 201
     data = res.json()
     assert data["title"] == "Confronto Multi-Auto Test"
+    assert "ai_summary_placeholder" in data
     assert len(data["comparisons"]) == 2
     assert data["comparisons"][0]["candidate_vehicle"]["model"] == candidate1["model"]
     assert data["comparisons"][1]["candidate_vehicle"]["model"] == "Zoe R135"

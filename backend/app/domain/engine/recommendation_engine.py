@@ -29,7 +29,7 @@ def _format_duration(years: float) -> str:
     return f"{years_part} e {months} {'mese' if months == 1 else 'mesi'}"
 
 
-def _format_eur(value, decimals: int = 2) -> str:
+def _format_eur(value: float | int | Decimal, decimals: int = 2) -> str:
     """Formats a euro amount with Italian conventions: 7941.95 -> '€7.941,95'."""
     sign = "-" if value < 0 else ""
     body = f"{abs(value):,.{decimals}f}".replace(",", "\x00").replace(".", ",").replace("\x00", ".")
