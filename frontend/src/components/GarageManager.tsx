@@ -333,8 +333,8 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                   >
                     <NumberInput
                       id="gv-price"
-                      min={0.1}
-                      step={100}
+                      min={0.01}
+                      step="any"
                       value={formData.vehicle.purchase_price}
                       onChange={(e) => handleInputChange('purchase_price', Number(e.target.value) || 0)}
                       required
@@ -344,6 +344,7 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                     <NumberInput
                       id="gv-value"
                       min={0}
+                      step="any"
                       value={formData.vehicle.current_value ?? 0}
                       onChange={(e) => handleInputChange('current_value', Number(e.target.value) || 0)}
                     />
@@ -352,6 +353,7 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                     <NumberInput
                       id="gv-tax"
                       min={0}
+                      step="any"
                       value={formData.vehicle.annual_tax ?? 0}
                       onChange={(e) => handleInputChange('annual_tax', Number(e.target.value) || 0)}
                     />
@@ -359,8 +361,8 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                   <Field label={`Consumo urbano (${consumptionUnit})`} htmlFor="gv-urban">
                     <NumberInput
                       id="gv-urban"
-                      min={0.1}
-                      step={0.1}
+                      min={0.01}
+                      step="any"
                       value={formData.vehicle.urban_consumption}
                       onChange={(e) => handleInputChange('urban_consumption', Number(e.target.value) || 0)}
                     />
@@ -368,8 +370,8 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                   <Field label={`Consumo extraurbano (${consumptionUnit})`} htmlFor="gv-extra">
                     <NumberInput
                       id="gv-extra"
-                      min={0.1}
-                      step={0.1}
+                      min={0.01}
+                      step="any"
                       value={formData.vehicle.extraurban_consumption}
                       onChange={(e) => handleInputChange('extraurban_consumption', Number(e.target.value) || 0)}
                     />
@@ -377,8 +379,8 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                   <Field label={`Consumo autostrada (${consumptionUnit})`} htmlFor="gv-highway">
                     <NumberInput
                       id="gv-highway"
-                      min={0.1}
-                      step={0.1}
+                      min={0.01}
+                      step="any"
                       value={formData.vehicle.highway_consumption}
                       onChange={(e) => handleInputChange('highway_consumption', Number(e.target.value) || 0)}
                     />
@@ -389,7 +391,7 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                         <NumberInput
                           id="gv-battery"
                           min={0}
-                          step={0.1}
+                          step="any"
                           value={formData.vehicle.battery_capacity ?? 0}
                           onChange={(e) => handleInputChange('battery_capacity', Number(e.target.value) || 0)}
                         />
@@ -398,7 +400,7 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                         <NumberInput
                           id="gv-wltp"
                           min={0}
-                          step={1}
+                          step="any"
                           value={formData.vehicle.wltp_range ?? 0}
                           onChange={(e) => handleInputChange('wltp_range', Number(e.target.value) || 0)}
                         />
@@ -409,6 +411,7 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                     <NumberInput
                       id="gv-maint"
                       min={0}
+                      step="any"
                       value={formData.vehicle.maintenance_cost_per_year ?? 0}
                       onChange={(e) => handleInputChange('maintenance_cost_per_year', Number(e.target.value) || 0)}
                     />
@@ -417,6 +420,7 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                     <NumberInput
                       id="gv-ins"
                       min={0}
+                      step="any"
                       value={formData.vehicle.insurance_cost_per_year ?? 0}
                       onChange={(e) => handleInputChange('insurance_cost_per_year', Number(e.target.value) || 0)}
                     />
@@ -425,6 +429,7 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                     <NumberInput
                       id="gv-tires"
                       min={0}
+                      step="any"
                       value={formData.vehicle.tire_cost_per_year ?? 0}
                       onChange={(e) => handleInputChange('tire_cost_per_year', Number(e.target.value) || 0)}
                     />
