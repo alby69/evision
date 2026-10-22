@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FullAnalysisResponse, ValueExplanation } from './types/api';
+import { FullAnalysisResponse, ComparativeAnalysisResponse, ValueExplanation } from './types/api';
 import { fetchDemoAnalysis, createAnalysis, fetchAnalysisById } from './services/api';
 import { RecommendationBadge } from './components/RecommendationBadge';
 import { ScenarioInsights } from './components/ScenarioInsights';
+import { ComparativeAnalysisView } from './components/ComparativeAnalysisView';
 
 const AnalysisCharts = React.lazy(() => import('./components/AnalysisCharts'));
 
@@ -67,8 +68,14 @@ const riskLabels: Record<'LOW' | 'MEDIUM' | 'HIGH', string> = {
   HIGH: 'Alto',
 };
 
+function isComparative(
+  a: FullAnalysisResponse | ComparativeAnalysisResponse
+): a is ComparativeAnalysisResponse {
+  return 'comparisons' in a && Array.isArray((a as ComparativeAnalysisResponse).comparisons);
+}
+
 export const App: React.FC = () => {
-  const [analysis, setAnalysis] = useState<FullAnalysisResponse | null>(null);
+  const [analysis, setAnalysis] = useState<FullAnalysisResponse | ComparativeAnalysisResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showWizard, setShowWizard] = useState<boolean>(false);
@@ -297,6 +304,22 @@ export const App: React.FC = () => {
             </p>
           </div>
         ) : analysis ? (
+          isComparative(analysis) ? (
+            <div ref={resultsRef} className="scroll-mt-20 space-y-6 animate-fade-up">
+              <ComparativeAnalysisView analysis={analysis} />
+              <footer className="border-t border-border/70 py-8 text-center text-xs leading-relaxed text-muted-foreground print:hidden">
+                <p className="flex items-center justify-center gap-1.5 font-semibold text-foreground">
+                  <Zap className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                  Consulente EV
+                  <InfoHint text="Motore di calcolo open source: i valori dipendono da costi, prezzi e percorrenze che inserisci." />
+                </p>
+                <p className="mx-auto mt-1.5 max-w-2xl">
+                  Gli output sono stime a scopo informativo e non costituiscono consulenza finanziaria. Verifica sempre
+                  prezzi, incentivi e condizioni reali prima di decidere.
+                </p>
+              </footer>
+            </div>
+          ) : (
           <div ref={resultsRef} className="scroll-mt-20 space-y-6 animate-fade-up">
             {/* Verdict hero */}
             <Card className="overflow-hidden">
@@ -520,6 +543,7 @@ export const App: React.FC = () => {
               </p>
             </footer>
           </div>
+          )
         ) : null}
       </main>
 

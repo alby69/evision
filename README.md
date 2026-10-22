@@ -10,7 +10,7 @@ An open-source decision support web application for evaluating the total financi
 
 * **Authoritative Calculation Engine**: Pure Python domain engine calculating Total Cost of Ownership (TCO), incremental cost, operational vs. total break-even, battery degradation, and real-world range.
 * **My Garage & Persistent History**: Save your reference vehicles permanently in PostgreSQL ("My Garage"), set default vehicles, and retrieve, rename, or delete past saved analyses.
-* **Multi-Car Simultaneous Comparison (1 vs N)**: Compare 1 owned/reference vehicle against up to 5 candidate EVs simultaneously with side-by-side KPI tables and multi-line Recharts TCO cumulative curves.
+* **Multi-Car Simultaneous Comparison (1 vs N)**: Compare 1 owned/reference vehicle against up to 5 candidate EVs simultaneously with side-by-side KPI tables with automatic best value highlighting, multi-line Recharts TCO cumulative curves, and a recommendation Winner Badge.
 * **Live Fuel & Energy Price Integration**: Fetch current regional fuel prices (Petrol, Diesel, LPG, CNG) and home electricity tariffs directly from the MIMIT (Osservaprezzi Carburanti) Open Data feed or configure them manually.
 * **Smart Recommendation Engine**: Produces actionable, interpretable guidance (`STRONG_BUY`, `BUY`, `MAYBE`, `KEEP_CURRENT`, `AVOID`) with confidence levels, risk scores (0-100), and "Why it makes sense" / "Cautions" explanations.
 * **Facts vs. Assumptions Transparency**: Explicit source tagging (`FACT`, `USER_INPUT`, `ESTIMATE`, `ASSUMPTION`) for every parameter and math breakdown.

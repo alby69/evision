@@ -305,3 +305,28 @@ export interface SavedVehicleResponse {
   created_at: string;
   updated_at: string;
 }
+
+export interface CandidateComparison {
+  candidate_vehicle: Vehicle;
+  candidate_tco: VehicleTCOResult;
+  break_even: BreakEvenResult;
+  candidate_range: RealWorldRangeResult;
+  candidate_battery_degradation: BatteryDegradationResult;
+  scenarios: ScenarioResult;
+  sensitivity: SensitivityFactor[];
+  recommendation: DecisionRecommendation;
+}
+
+export interface ComparativeAnalysisResponse {
+  id?: string;
+  title: string;
+  current_vehicle: Vehicle;
+  current_tco: VehicleTCOResult;
+  usage: UsageProfile;
+  charging: ChargingProfile;
+  fuel: FuelProfile;
+  ownership: OwnershipScenario;
+  comparisons: CandidateComparison[];
+  created_at?: string;
+  ai_summary_placeholder?: string | null;
+}
