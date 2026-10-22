@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, Field
 
 from app.domain.models.charging import ChargingProfile, FuelProfile
@@ -90,12 +89,14 @@ class VehicleValuationResponse(BaseModel):
     confidence: str = Field(description="low | medium | high")
     comparables: list[ValuationComparable] = Field(default_factory=list)
 
+
 class TCORequest(BaseModel):
     vehicle: Vehicle
     usage: UsageProfile
     charging: ChargingProfile
     fuel: FuelProfile
     ownership: OwnershipScenario
+
 
 class BreakEvenRequest(BaseModel):
     current_vehicle: Vehicle
@@ -105,6 +106,7 @@ class BreakEvenRequest(BaseModel):
     fuel: FuelProfile
     ownership: OwnershipScenario
 
+
 class FullAnalysisRequest(BaseModel):
     title: str | None = "EV Replacement Decision Analysis"
     current_vehicle: Vehicle
@@ -113,6 +115,7 @@ class FullAnalysisRequest(BaseModel):
     charging: ChargingProfile = Field(default_factory=ChargingProfile)
     fuel: FuelProfile = Field(default_factory=FuelProfile)
     ownership: OwnershipScenario = Field(default_factory=OwnershipScenario)
+
 
 class FullAnalysisResponse(BaseModel):
     id: str | None = None
@@ -131,3 +134,69 @@ class FullAnalysisResponse(BaseModel):
     scenarios: ScenarioResult
     sensitivity: list[SensitivityFactor]
     recommendation: DecisionRecommendation
+
+
+# My Garage Schemas
+class SavedVehicleCreate(BaseModel):
+    name: str = Field(min_length=1, description="Name for vehicle in garage")
+    is_default: bool = False
+    vehicle_data: Vehicle
+
+
+class SavedVehicleUpdate(BaseModel):
+    name: str | None = None
+    is_default: bool | None = None
+    vehicle_data: Vehicle | None = None
+
+
+class SavedVehicleResponse(BaseModel):
+    id: str
+    name: str
+    is_default: bool
+    vehicle_data: Vehicle
+    created_at: str
+    updated_at: str
+
+
+# Multi-Car Comparison Schemas
+class CandidateComparison(BaseModel):
+    candidate_vehicle: Vehicle
+    candidate_tco: VehicleTCOResult
+    break_even: BreakEvenResult
+    candidate_range: RealWorldRangeResult
+    candidate_battery_degradation: BatteryDegradationResult
+    scenarios: ScenarioResult
+    sensitivity: list[SensitivityFactor]
+    recommendation: DecisionRecommendation
+
+
+class ComparativeAnalysisRequest(BaseModel):
+    title: str | None = "Confronto Multi-Auto EV"
+    current_vehicle_id: str | None = None
+    current_vehicle: Vehicle | None = None
+    candidate_vehicles: list[Vehicle] = Field(min_length=1)
+    usage: UsageProfile = Field(default_factory=UsageProfile)
+    charging: ChargingProfile = Field(default_factory=ChargingProfile)
+    fuel: FuelProfile = Field(default_factory=FuelProfile)
+    ownership: OwnershipScenario = Field(default_factory=OwnershipScenario)
+
+
+class ComparativeAnalysisResponse(BaseModel):
+    id: str | None = None
+    title: str
+    current_vehicle: Vehicle
+    current_tco: VehicleTCOResult
+    usage: UsageProfile
+    charging: ChargingProfile
+    fuel: FuelProfile
+    ownership: OwnershipScenario
+    comparisons: list[CandidateComparison]
+    created_at: str | None = None
+
+
+class SavedAnalysisSummary(BaseModel):
+    id: str
+    title: str
+    current_vehicle_name: str
+    candidate_count: int
+    created_at: str
