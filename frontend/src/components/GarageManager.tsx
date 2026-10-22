@@ -68,12 +68,6 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
     vehicle: Vehicle;
   }>({ name: '', is_default: false, vehicle: { ...emptyVehicle } });
 
-  useEffect(() => {
-    if (isOpen) {
-      loadVehicles();
-    }
-  }, [isOpen]);
-
   const loadVehicles = async () => {
     setLoading(true);
     try {
@@ -85,6 +79,12 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      loadVehicles();
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
