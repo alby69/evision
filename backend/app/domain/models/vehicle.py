@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from app.domain.models.enums import FuelType, ValueSource, VehicleType
+from app.domain.models.enums import FuelType, ValueSource, VehicleCategory, VehicleType
 
 
 class Vehicle(BaseModel):
@@ -13,6 +13,7 @@ class Vehicle(BaseModel):
     year: int
     registration_date: str | None = None
 
+    category: VehicleCategory | None = Field(default=None, description="Vehicle category (e.g. CAR, SUV, VAN, MOTO)")
     vehicle_type: VehicleType
     fuel_type: FuelType
 

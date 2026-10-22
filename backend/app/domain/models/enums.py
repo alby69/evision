@@ -1,6 +1,13 @@
 from enum import Enum
 
 
+class VehicleCategory(str, Enum):
+    CAR = "CAR"
+    SUV = "SUV"
+    VAN = "VAN"
+    MOTORCYCLE = "MOTO"
+
+
 class VehicleType(str, Enum):
     BEV = "BEV"
     PHEV = "PHEV"

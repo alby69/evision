@@ -1,3 +1,10 @@
+export enum VehicleCategory {
+  CAR = 'CAR',
+  SUV = 'SUV',
+  VAN = 'VAN',
+  MOTORCYCLE = 'MOTO',
+}
+
 export enum VehicleType {
   BEV = 'BEV',
   PHEV = 'PHEV',
@@ -103,6 +110,7 @@ export interface Vehicle {
   model: string;
   version?: string;
   year: number;
+  category?: VehicleCategory;
   vehicle_type: VehicleType;
   fuel_type: FuelType;
   purchase_price: number;
