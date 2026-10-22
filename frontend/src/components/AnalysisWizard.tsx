@@ -3,6 +3,7 @@ import {
   Vehicle,
   UsageProfile,
   ChargingProfile,
+  FuelProfile,
   OwnershipScenario,
   VehicleType,
   FuelType,
@@ -19,6 +20,7 @@ import {
   Zap,
   Plug,
   Wallet,
+  Fuel,
   ChevronLeft,
   ChevronRight,
   Loader2,
@@ -33,6 +35,7 @@ export interface AnalysisPayload {
   candidate_vehicle: Vehicle;
   usage: UsageProfile;
   charging: ChargingProfile;
+  fuel: FuelProfile;
   ownership: OwnershipScenario;
 }
 
@@ -40,6 +43,7 @@ interface AnalysisWizardProps {
   onRunAnalysis: (payload: AnalysisPayload) => void;
   isLoading: boolean;
   onClose: () => void;
+  initialVehicle?: Vehicle;
 }
 
 const STEPS = [
@@ -47,6 +51,7 @@ const STEPS = [
   { label: 'Utilizzo', icon: Route },
   { label: 'EV candidata', icon: Zap },
   { label: 'Ricarica', icon: Plug },
+  { label: 'Carburante', icon: Fuel },
   { label: 'Orizzonte', icon: Wallet },
 ] as const;
 
@@ -55,31 +60,6 @@ const toPercent = (dec: number) => Math.round(dec * 100);
 const fromPercent = (pct: number) => clamp(pct, 0, 100) / 100;
 const splitSum = (...values: number[]) => values.reduce((acc, v) => acc + v, 0);
 const isFull = (sumDec: number) => Math.abs(sumDec - 1) < 0.005;
-
-const autoFillThird = (
-  origCity: number,
-  origExtraurban: number,
-  origHighway: number,
-  changedField: 'city' | 'extraurban' | 'highway',
-  newValue: number
-): { city: number; extraurban: number; highway: number } => {
-  const values = { city: origCity, extraurban: origExtraurban, highway: origHighway };
-  values[changedField] = newValue;
-
-  const keys: Array<keyof typeof values> = ['city', 'extraurban', 'highway'];
-  const origNonZero = keys.filter((k) => (k === changedField ? newValue : values[k]) > 0);
-  // Auto-fill only if user is filling a previously empty field and exactly 1 other was > 0
-  if (origNonZero.length === 2 && newValue > 0) {
-    const sum = values[origNonZero[0]] + values[origNonZero[1]];
-    if (sum < 1) {
-      const zeroKey = keys.find((k) => values[k] === 0);
-      if (zeroKey) {
-        values[zeroKey] = 1 - sum;
-      }
-    }
-  }
-  return values;
-};
 
 const FUEL_MAP: Record<string, { fuel: FuelType; type: VehicleType }> = {
   gasoline: { fuel: FuelType.PETROL, type: VehicleType.PETROL },
@@ -147,6 +127,7 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
   onRunAnalysis,
   isLoading,
   onClose,
+  initialVehicle,
 }) => {
   const [step, setStep] = useState(1);
   const [maxStep, setMaxStep] = useState(1);
@@ -155,23 +136,25 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
   const bodyRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
 
-  const [currentVehicle, setCurrentVehicle] = useState<Vehicle>({
-    brand: 'Honda',
-    model: 'CR-V',
-    version: '1.6 i-DTEC',
-    year: 2016,
-    vehicle_type: VehicleType.DIESEL,
-    fuel_type: FuelType.DIESEL,
-    purchase_price: 12000,
-    current_value: 5000,
-    annual_tax: 250,
-    urban_consumption: 5.5,
-    extraurban_consumption: 4.5,
-    highway_consumption: 6.0,
-    maintenance_cost_per_year: 700,
-    insurance_cost_per_year: 600,
-    tire_cost_per_year: 150,
-  });
+  const [currentVehicle, setCurrentVehicle] = useState<Vehicle>(() =>
+    initialVehicle ?? {
+      brand: 'Honda',
+      model: 'CR-V',
+      version: '1.6 i-DTEC',
+      year: 2016,
+      vehicle_type: VehicleType.DIESEL,
+      fuel_type: FuelType.DIESEL,
+      purchase_price: 12000,
+      current_value: 5000,
+      annual_tax: 250,
+      urban_consumption: 5.5,
+      extraurban_consumption: 4.5,
+      highway_consumption: 6.0,
+      maintenance_cost_per_year: 700,
+      insurance_cost_per_year: 600,
+      tire_cost_per_year: 150,
+    }
+  );
 
   const [candidateVehicle, setCandidateVehicle] = useState<Vehicle>({
     brand: 'Renault',
@@ -219,6 +202,14 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
     charging_losses_percentage: 0.1,
   });
 
+  const [fuel, setFuel] = useState<FuelProfile>({
+    diesel_price: 1.80,
+    petrol_price: 1.85,
+    lpg_price: 0.75,
+    cng_price: 1.35,
+    annual_fuel_price_growth: 0.03,
+  });
+
   const [ownership, setOwnership] = useState<OwnershipScenario>({
     horizon_years: 5,
     trade_in_value: 5000,
@@ -253,9 +244,9 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
     charging.public_dc_charging_percentage,
   );
 
-  const stepErrors: Record<number, string | null> = {
+const stepErrors: Record<number, string | null> = {
     1: !currentVehicle.brand.trim() || !currentVehicle.model.trim()
-      ? 'Marca e modello dell’auto attuale sono obbligatori.'
+      ? 'Marca e modello dell\'auto attuale sono obbligatori.'
       : null,
     2: !isFull(usageSum) ? 'La ripartizione del profilo di guida deve totalizzare 100%.' : null,
     3: !candidateVehicle.brand.trim() || !candidateVehicle.model.trim()
@@ -266,9 +257,12 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
     4: !isFull(chargingSum)
       ? 'La ripartizione delle modalità di ricarica deve totalizzare 100%.'
       : charging.home_energy_price <= 0
-        ? 'Il prezzo dell’energia a casa deve essere maggiore di zero.'
+        ? 'Il prezzo dell\'energia a casa deve essere maggiore di zero.'
         : null,
-    5: null,
+    5: fuel.diesel_price <= 0 || fuel.petrol_price <= 0
+      ? 'I prezzi di diesel e benzina devono essere maggiori di zero.'
+      : null,
+    6: null,
   };
 
   const canProceed = stepErrors[step] === null;
@@ -310,12 +304,13 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
   };
 
   const handleFinish = () => {
-    if (!stepErrors[5]) {
+    if (!stepErrors[6]) {
       onRunAnalysis({
         current_vehicle: currentVehicle,
         candidate_vehicle: candidateVehicle,
         usage,
         charging,
+        fuel,
         ownership,
       });
     }
@@ -696,44 +691,17 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
                     <PercentInput
                       label="Urbano"
                       value={usage.city_percentage}
-                      onChange={(v) => {
-                        const updated = autoFillThird(
-                          usage.city_percentage,
-                          usage.extraurban_percentage,
-                          usage.highway_percentage,
-                          'city',
-                          v
-                        );
-                        setUsage({ ...usage, ...updated });
-                      }}
+                      onChange={(v) => setUsage({ ...usage, city_percentage: v })}
                     />
                     <PercentInput
                       label="Extraurbano"
                       value={usage.extraurban_percentage}
-                      onChange={(v) => {
-                        const updated = autoFillThird(
-                          usage.city_percentage,
-                          usage.extraurban_percentage,
-                          usage.highway_percentage,
-                          'extraurban',
-                          v
-                        );
-                        setUsage({ ...usage, ...updated });
-                      }}
+                      onChange={(v) => setUsage({ ...usage, extraurban_percentage: v })}
                     />
                     <PercentInput
                       label="Autostrada"
                       value={usage.highway_percentage}
-                      onChange={(v) => {
-                        const updated = autoFillThird(
-                          usage.city_percentage,
-                          usage.extraurban_percentage,
-                          usage.highway_percentage,
-                          'highway',
-                          v
-                        );
-                        setUsage({ ...usage, ...updated });
-                      }}
+                      onChange={(v) => setUsage({ ...usage, highway_percentage: v })}
                     />
                   </div>
                 </div>
@@ -939,6 +907,75 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
             )}
 
             {step === 5 && (
+              <section aria-label="Prezzi carburante">
+                <h3 className="text-base font-bold">Prezzi carburante e crescita annua</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Il costo di diesel, benzina, GPL e metano incide sul TCO del veicolo termico. La crescita annua simula l'inflazione sui carburanti.
+                </p>
+
+                <div className="mt-4 rounded-xl border border-border bg-background p-4">
+                  <p className="overline mb-3">Prezzi attuali (€/L o €/kg)</p>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <Field label="Diesel (€/L)" htmlFor="fuel-diesel">
+                      <NumberInput
+                        id="fuel-diesel"
+                        min={0}
+                        step={0.01}
+                        value={fuel.diesel_price}
+                        onChange={(e) => setFuel({ ...fuel, diesel_price: Number(e.target.value) })}
+                        aria-invalid={fuel.diesel_price <= 0}
+                      />
+                    </Field>
+                    <Field label="Benzina (€/L)" htmlFor="fuel-petrol">
+                      <NumberInput
+                        id="fuel-petrol"
+                        min={0}
+                        step={0.01}
+                        value={fuel.petrol_price}
+                        onChange={(e) => setFuel({ ...fuel, petrol_price: Number(e.target.value) })}
+                        aria-invalid={fuel.petrol_price <= 0}
+                      />
+                    </Field>
+                    <Field label="GPL (€/L)" htmlFor="fuel-lpg">
+                      <NumberInput
+                        id="fuel-lpg"
+                        min={0}
+                        step={0.01}
+                        value={fuel.lpg_price}
+                        onChange={(e) => setFuel({ ...fuel, lpg_price: Number(e.target.value) })}
+                      />
+                    </Field>
+                    <Field label="Metano (€/kg)" htmlFor="fuel-cng">
+                      <NumberInput
+                        id="fuel-cng"
+                        min={0}
+                        step={0.01}
+                        value={fuel.cng_price}
+                        onChange={(e) => setFuel({ ...fuel, cng_price: Number(e.target.value) })}
+                      />
+                    </Field>
+                  </div>
+                </div>
+
+                <Field
+                  label={`Crescita annua prezzi carburante: {fmtPct(fuel.annual_fuel_price_growth)}`}
+                  htmlFor="fuel-growth"
+                  hint="Aumento percentuale annuo atteso del prezzo dei carburanti (es. 0,03 = +3%/anno)."
+                >
+                  <RangeSlider
+                    id="fuel-growth"
+                    min={0}
+                    max={0.1}
+                    step={0.005}
+                    value={fuel.annual_fuel_price_growth}
+                    onChange={(v) => setFuel({ ...fuel, annual_fuel_price_growth: v })}
+                    ariaLabel="Crescita annua prezzi carburante"
+                  />
+                </Field>
+              </section>
+            )}
+
+            {step === 6 && (
               <section aria-label="Orizzonte e finanziamento">
                 <h3 className="text-base font-bold">Per quanto la tieni e come la paghi</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -1116,6 +1153,9 @@ export const AnalysisWizard: React.FC<AnalysisWizardProps> = ({
                     </span>
                     <span className="rounded-full border border-border bg-card px-3 py-1 tabular-nums">
                       {toPercent(charging.home_charging_percentage)}% ricarica a casa
+                    </span>
+                    <span className="rounded-full border border-border bg-card px-3 py-1 tabular-nums">
+                      Diesel {fmtEUR(fuel.diesel_price, 2)}/L · Benzina {fmtEUR(fuel.petrol_price, 2)}/L
                     </span>
                     <span className="rounded-full border border-border bg-card px-3 py-1 tabular-nums">
                       {ownership.horizon_years} anni

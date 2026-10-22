@@ -3,6 +3,9 @@ import {
   CarFacetMap,
   EVCatalogItem,
   FullAnalysisResponse,
+  SavedVehicleCreate,
+  SavedVehicleResponse,
+  SavedVehicleUpdate,
   Vehicle,
   VehicleValuation,
   VehicleValuationRequest,
@@ -124,6 +127,40 @@ export async function createAnalysis(payload: unknown): Promise<FullAnalysisResp
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error('Impossibile calcolare l’analisi. Controlla i dati inseriti.');
+  if (!res.ok) throw new Error('Impossibile calcolare l\'analisi. Controlla i dati inseriti.');
   return res.json();
+}
+
+// Garage API
+export async function listGarageVehicles(): Promise<SavedVehicleResponse[]> {
+  const res = await fetch(`${API_BASE}/garage`);
+  if (!res.ok) throw new Error('Impossibile caricare il garage.');
+  return res.json();
+}
+
+export async function createGarageVehicle(payload: SavedVehicleCreate): Promise<SavedVehicleResponse> {
+  const res = await fetch(`${API_BASE}/garage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Impossibile salvare il veicolo in garage.');
+  return res.json();
+}
+
+export async function updateGarageVehicle(vehicleId: string, payload: SavedVehicleUpdate): Promise<SavedVehicleResponse> {
+  const res = await fetch(`${API_BASE}/garage/${vehicleId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Impossibile aggiornare il veicolo in garage.');
+  return res.json();
+}
+
+export async function deleteGarageVehicle(vehicleId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/garage/${vehicleId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Impossibile eliminare il veicolo dal garage.');
 }

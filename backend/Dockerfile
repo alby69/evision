@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY pyproject.toml ./
 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir fastapi "uvicorn[standard]" pydantic pydantic-settings sqlalchemy asyncpg psycopg2-binary alembic httpx
+    pip install --no-cache-dir fastapi "uvicorn[standard]" pydantic pydantic-settings sqlalchemy asyncpg psycopg2-binary alembic httpx beautifulsoup4 cachetools greenlet aiosqlite
 
 COPY . .
 

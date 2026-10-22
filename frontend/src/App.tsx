@@ -13,6 +13,7 @@ const AnalysisChartsSkeleton: React.FC = () => (
   </Card>
 );
 import { AnalysisWizard, AnalysisPayload } from './components/AnalysisWizard';
+import { GarageManager } from './components/GarageManager';
 import { Card, StatCard, SectionHeader, Chip, ThemeToggle, InfoHint } from './components/ui';
 import {
   Zap,
@@ -33,8 +34,10 @@ import {
   Calendar,
   Route,
   Plug,
+  Warehouse,
 } from 'lucide-react';
 import { fmtDuration, fmtEUR, fmtNum, fmtPct, fmtSignedEUR } from './utils/format';
+import { Vehicle } from './types/api';
 
 type AnalysisSource = 'demo' | 'saved' | 'custom';
 
@@ -69,11 +72,18 @@ export const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showWizard, setShowWizard] = useState<boolean>(false);
+  const [showGarage, setShowGarage] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [source, setSource] = useState<AnalysisSource>('demo');
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [garageVehicle, setGarageVehicle] = useState<Vehicle | null>(null);
 
   const resultsRef = useRef<HTMLDivElement>(null);
+
+  const handleGarageSelect = (vehicle: Vehicle) => {
+    setGarageVehicle(vehicle);
+    setShowWizard(true);
+  };
 
   const loadDemoAnalysis = async () => {
     setLoading(true);
@@ -206,6 +216,16 @@ export const App: React.FC = () => {
 
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
+
+            <button
+              onClick={() => setShowGarage(true)}
+              className="btn-outline h-10 px-3 sm:px-3.5"
+              aria-label="Apri garage"
+              title="I miei veicoli salvati"
+            >
+              <Warehouse className="h-4 w-4" />
+              <span className="hidden sm:inline">Garage</span>
+            </button>
 
             {analysis && (
               <>
@@ -507,7 +527,19 @@ export const App: React.FC = () => {
         <AnalysisWizard
           onRunAnalysis={handleCustomAnalysis}
           isLoading={loading}
-          onClose={() => setShowWizard(false)}
+          onClose={() => {
+            setShowWizard(false);
+            setGarageVehicle(null);
+          }}
+          initialVehicle={garageVehicle ?? undefined}
+        />
+      )}
+
+      {showGarage && (
+        <GarageManager
+          isOpen={showGarage}
+          onClose={() => setShowGarage(false)}
+          onSelectVehicle={handleGarageSelect}
         />
       )}
     </div>

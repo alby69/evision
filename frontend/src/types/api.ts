@@ -276,3 +276,24 @@ export interface FullAnalysisResponse {
   sensitivity: SensitivityFactor[];
   recommendation: DecisionRecommendation;
 }
+
+export interface SavedVehicleCreate {
+  name: string;
+  is_default: boolean;
+  vehicle_data: Vehicle;
+}
+
+export interface SavedVehicleUpdate {
+  name?: string;
+  is_default?: boolean;
+  vehicle_data?: Vehicle;
+}
+
+export interface SavedVehicleResponse {
+  id: string;
+  name: string;
+  is_default: boolean;
+  vehicle_data: Vehicle;
+  created_at: string;
+  updated_at: string;
+}
