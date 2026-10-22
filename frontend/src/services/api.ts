@@ -1,8 +1,10 @@
 import {
+  AIExplainResponse,
   CarCatalogItem,
   CarFacetMap,
   EVCatalogItem,
   FullAnalysisResponse,
+  QnAnessResponse,
   SavedVehicleCreate,
   SavedVehicleResponse,
   SavedVehicleUpdate,
@@ -163,4 +165,23 @@ export async function deleteGarageVehicle(vehicleId: string): Promise<void> {
     method: 'DELETE',
   });
   if (!res.ok) throw new Error('Impossibile eliminare il veicolo dal garage.');
+}
+
+// AI Advisor API
+export async function fetchAIExplain(analysisId: string): Promise<AIExplainResponse> {
+  const res = await fetch(`${API_BASE}/analyses/${analysisId}/ai-explain`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Impossibile generare la spiegazione AI.');
+  return res.json();
+}
+
+export async function sendQnAMessage(analysisId: string, question: string): Promise<QnAnessResponse> {
+  const res = await fetch(`${API_BASE}/analyses/${analysisId}/qna`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question }),
+  });
+  if (!res.ok) throw new Error('Impossibile ottenere risposta dall\'Assistente AI.');
+  return res.json();
 }

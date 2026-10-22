@@ -8,6 +8,7 @@ from app.domain.models.results import (
     BreakEvenResult,
     DecisionRecommendation,
     RealWorldRangeResult,
+    RedFlag,
     ValueExplanation,
     VehicleTCOResult,
 )
@@ -148,6 +149,69 @@ def generate_decision_recommendation(
         )
     )
 
+    # Evaluate Red Flags
+    red_flags: list[RedFlag] = []
+
+    if be_years is None or be_years > 5.0:
+        red_flags.append(
+            RedFlag(
+                code="BREAK_EVEN_LONG",
+                severity="DANGER" if (be_years is None or be_years > horizon) else "WARNING",
+                title="Punto di pareggio oltre 5 anni",
+                description=(
+                    f"Il tempo di rientro operativo ({f'{be_years:.1f} anni' if be_years else 'non raggiunto'}) "
+                    f"supera i 5 anni o la durata dell'orizzonte."
+                ),
+            )
+        )
+
+    if risk_score >= 50:
+        red_flags.append(
+            RedFlag(
+                code="HIGH_RISK",
+                severity="DANGER",
+                title="Punteggio di rischio elevato",
+                description=f"Punteggio di rischio di {risk_score}/100 derivante da investimento iniziale o ricarica pubblica.",
+            )
+        )
+
+    if range_res.winter_highway_range_km < 200:
+        red_flags.append(
+            RedFlag(
+                code="WINTER_RANGE_LOW",
+                severity="WARNING",
+                title="Autonomia autostradale invernale < 200 km",
+                description=f"Autonomia autostradale invernale limitata ({range_res.winter_highway_range_km:.0f} km).",
+            )
+        )
+
+    if charging.home_charging_percentage < 0.40:
+        red_flags.append(
+            RedFlag(
+                code="LOW_HOME_CHARGING",
+                severity="WARNING",
+                title="Elevata ricarica pubblica",
+                description=f"Solo il {int(charging.home_charging_percentage * 100)}% delle ricariche avviene a casa.",
+            )
+        )
+
+    if savings < Decimal(0):
+        red_flags.append(
+            RedFlag(
+                code="NEGATIVE_SAVINGS",
+                severity="DANGER",
+                title="Perdita finanziaria netta",
+                description=f"Passare a questo EV comporta costi superiori di {_format_eur(abs(savings))} in {horizon} anni.",
+            )
+        )
+
+    # Calculate default Weighted Score (R5: Matrice Punteggio Ponderato)
+    w_savings, w_range, w_risk = 0.5, 0.3, 0.2
+    norm_savings = max(0.0, min(100.0, 50.0 + (float(savings) / 200.0)))
+    norm_range = min(100.0, (range_res.mixed_range_km / 500.0) * 100.0)
+    norm_risk = max(0.0, 100.0 - float(risk_score))
+    weighted_score = round(norm_savings * w_savings + norm_range * w_range + norm_risk * w_risk, 1)
+
     return DecisionRecommendation(
         rating=rating.value,
         confidence=confidence,
@@ -157,4 +221,6 @@ def generate_decision_recommendation(
         key_advantages=key_advantages,
         cautions_and_risks=cautions,
         explanations=explanations,
+        red_flags=red_flags,
+        weighted_score=weighted_score,
     )

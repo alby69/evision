@@ -13,11 +13,19 @@ from app.domain.models.ownership import OwnershipScenario
 from app.domain.models.usage import UsageProfile
 from app.models.db_models import SavedAnalysis, SavedVehicle
 from app.schemas.api_schemas import (
+    AIExplainResponse,
     ComparativeAnalysisRequest,
     ComparativeAnalysisResponse,
     FullAnalysisRequest,
     FullAnalysisResponse,
+    QnAnessRequest,
+    QnAnessResponse,
     SavedAnalysisSummary,
+)
+from app.services.ai_advisor_service import (
+    answer_qna,
+    generate_ai_explanation,
+    generate_rule_based_explanation,
 )
 from app.services.analysis_service import run_comparative_analysis, run_full_analysis
 
@@ -170,6 +178,9 @@ async def create_comparative_analysis(
         comparisons=res_dict["comparisons"],
         created_at=created_str,
     )
+
+    ai_summary = generate_rule_based_explanation(response.model_dump(mode="json"))
+    response.ai_summary_placeholder = ai_summary
 
     _saved_analyses[analysis_id] = response.model_dump(mode="json")
 
@@ -333,3 +344,68 @@ async def delete_analysis(analysis_id: str, db: AsyncSession = Depends(get_db)) 
 
     if not deleted:
         raise HTTPException(status_code=404, detail="Analisi non trovata")
+
+
+@router.post("/{analysis_id}/ai-explain", response_model=AIExplainResponse)
+async def explain_analysis_ai(
+    analysis_id: str, db: AsyncSession = Depends(get_db)
+) -> AIExplainResponse:
+    """Generates an AI-driven natural language summary and verdict explanation for an analysis."""
+    analysis_obj: dict[str, Any] | None = None
+
+    if analysis_id == "demo-analysis-001":
+        demo_resp = get_demo_analysis()
+        analysis_obj = demo_resp.model_dump(mode="json")
+    else:
+        try:
+            stmt = select(SavedAnalysis).where(SavedAnalysis.id == analysis_id)
+            res = await db.execute(stmt)
+            entry = res.scalar_one_or_none()
+            if entry and isinstance(entry.analysis_result, dict):
+                analysis_obj = entry.analysis_result
+        except Exception:
+            pass
+
+        if not analysis_obj and analysis_id in _saved_analyses:
+            analysis_obj = _saved_analyses[analysis_id]
+
+    if not analysis_obj:
+        raise HTTPException(status_code=404, detail="Analisi non trovata")
+
+    ai_summary = await generate_ai_explanation(analysis_obj)
+
+    # Persist updated summary if comparative
+    if "ai_summary_placeholder" in analysis_obj:
+        analysis_obj["ai_summary_placeholder"] = ai_summary
+
+    return AIExplainResponse(ai_summary=ai_summary)
+
+
+@router.post("/{analysis_id}/qna", response_model=QnAnessResponse)
+async def qna_analysis_ai(
+    analysis_id: str, req: QnAnessRequest, db: AsyncSession = Depends(get_db)
+) -> QnAnessResponse:
+    """Answers a user question about their analysis using AI advisory."""
+    analysis_obj: dict[str, Any] | None = None
+
+    if analysis_id == "demo-analysis-001":
+        demo_resp = get_demo_analysis()
+        analysis_obj = demo_resp.model_dump(mode="json")
+    else:
+        try:
+            stmt = select(SavedAnalysis).where(SavedAnalysis.id == analysis_id)
+            res = await db.execute(stmt)
+            entry = res.scalar_one_or_none()
+            if entry and isinstance(entry.analysis_result, dict):
+                analysis_obj = entry.analysis_result
+        except Exception:
+            pass
+
+        if not analysis_obj and analysis_id in _saved_analyses:
+            analysis_obj = _saved_analyses[analysis_id]
+
+    if not analysis_obj:
+        raise HTTPException(status_code=404, detail="Analisi non trovata")
+
+    answer = await answer_qna(analysis_obj, req.question)
+    return QnAnessResponse(answer=answer)

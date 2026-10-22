@@ -46,15 +46,14 @@ Questo documento traccia l'evoluzione del progetto, con dettagli tecnici e crite
 | **R2** | **Validazione Consumi** | Aggiunto `min={0.1}` e validazione required sui campi di consumo per prevenire errori di divisione per zero nel motore TCO. | 🔴 Alta | ✅ Completato |
 | **R3** | **UI Dinamica Consumi** | Le etichette dei consumi mostrano dinamicamente "L/100km" o "kWh/100km" in base all'alimentazione. | 🟡 Media | ✅ Completato |
 | **R4** | **Campi EV nel Garage** | Aggiunti campi condizionali "Capacità batteria (kWh)" e "Autonomia WLTP (km)" nel form di inserimento. | 🟡 Media | ✅ Completato |
-| **R5** | **Matrice Punteggio Ponderato** | Permettere all'utente di personalizzare i pesi (Risparmio, Autonomia, Sostenibilità) per il calcolo del "Winner Score". | 🟡 Media | 🗺️ In Backlog (v0.5) |
-| **R6** | **Export PDF Comparativo** | Report PDF dedicato a più colonne per il confronto 1 vs N, con grafici sovrapposti e tabella KPI. | 🟢 Bassa | 🗺️ In Backlog (v0.5) |
+| **R5** | **Matrice Punteggio Ponderato** | Permettere all'utente di personalizzare i pesi (Risparmio, Autonomia, Sostenibilità) per il calcolo del "Winner Score". | 🟡 Media | ✅ Completato |
+| **R6** | **Export PDF Comparativo** | Report PDF dedicato a più colonne per il confronto 1 vs N, con grafici sovrapposti e tabella KPI. | 🟢 Bassa | ✅ Completato |
 
-## 🔜 v0.5 - AI Advisor & Reportistica Avanzata
+## ✅ v0.5 - AI Advisor & Reportistica Avanzata (COMPLETATO)
 
-_Periodo stimato: Q1 2027_
 _Obiettivo: Trasformare i dati grezzi in narrazioni decisionali chiare e automatizzare la reportistica._
 
-- [ ] **LLM-Assisted Comparative Summary**: Generazione di un paragrafo in linguaggio naturale che spiega *perché* l'auto X è migliore dell'auto Y per lo specifico utente (`ai_summary_placeholder` predisposto nello schema API).
-- [ ] **Export PDF Comparativo**: Layout PDF ottimizzato per la stampa a due colonne con grafici Recharts esportati in SVG.
-- [ ] **Alert di Soglia (Red Flags)**: Evidenziazione visiva automatica nei risultati di parametri fuori dagli intervalli di sicurezza (es. break-even > 5 anni).
-- [ ] **Chat-like Q&A**: Interfaccia chat per porre domande sull'analisi generata.
+- [x] **LLM-Assisted Comparative Summary**: Generazione di un paragrafo in linguaggio naturale che spiega *perché* l'auto X è migliore dell'auto Y per lo specifico utente (`ai_summary_placeholder` popolato via API e servizio AI).
+- [x] **Export PDF Comparativo**: Layout PDF e regole `@media print` ottimizzate per la stampa a più colonne con grafici, red flags e tabella KPI side-by-side.
+- [x] **Alert di Soglia (Red Flags)**: Evidenziazione visiva automatica nei risultati di parametri fuori dagli intervalli di sicurezza (es. break-even > 5 anni, ricarica domestica limitata, autonomia invernale < 200km).
+- [x] **Chat-like Q&A**: Interfaccia chat interattiva e componente `AIAssistantWidget` con endpoint `/qna` per porre domande sull'analisi generata.

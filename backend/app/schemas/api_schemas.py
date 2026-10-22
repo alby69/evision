@@ -201,3 +201,16 @@ class SavedAnalysisSummary(BaseModel):
     current_vehicle_name: str
     candidate_count: int
     created_at: str
+
+
+# AI Advisor Schemas
+class AIExplainResponse(BaseModel):
+    ai_summary: str
+
+
+class QnAnessRequest(BaseModel):
+    question: str = Field(min_length=1, description="Question asked by the user regarding their analysis")
+
+
+class QnAnessResponse(BaseModel):
+    answer: str

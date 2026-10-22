@@ -4,6 +4,7 @@ import { fetchDemoAnalysis, createAnalysis, fetchAnalysisById } from './services
 import { RecommendationBadge } from './components/RecommendationBadge';
 import { ScenarioInsights } from './components/ScenarioInsights';
 import { ComparativeAnalysisView } from './components/ComparativeAnalysisView';
+import { AIAssistantWidget } from './components/AIAssistantWidget';
 
 const AnalysisCharts = React.lazy(() => import('./components/AnalysisCharts'));
 
@@ -436,8 +437,29 @@ export const App: React.FC = () => {
               />
             </div>
 
+            {/* AI Assistant Chat Widget */}
+            <AIAssistantWidget analysisId={analysis.id} />
+
             {/* Scenarios & sensitivity */}
             <ScenarioInsights analysis={analysis} />
+
+            {/* Red Flags / Avvisi di Soglia */}
+            {analysis.recommendation.red_flags && analysis.recommendation.red_flags.length > 0 && (
+              <Card className="p-5 border-destructive/40 bg-destructive/10">
+                <SectionHeader icon={<ShieldAlert className="h-4 w-4 text-destructive" />} title="Alert di Soglia (Red Flags)" />
+                <div className="mt-3 space-y-2">
+                  {analysis.recommendation.red_flags.map((rf, idx) => (
+                    <div key={idx} className="flex items-start gap-2.5 text-sm">
+                      <Chip tone="rose">{rf.severity}</Chip>
+                      <div>
+                        <span className="font-bold text-foreground">{rf.title}: </span>
+                        <span className="text-muted-foreground">{rf.description}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
 
             {/* Pros & cautions */}
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">

@@ -81,6 +81,13 @@ class SensitivityFactor(BaseModel):
     impact_score: float  # 0.0 to 10.0
     impact_description: str
 
+class RedFlag(BaseModel):
+    code: str  # e.g., BREAK_EVEN_LONG, HIGH_RISK, WINTER_RANGE_LOW, LOW_HOME_CHARGING, NEGATIVE_SAVINGS
+    severity: str  # WARNING, DANGER, CRITICAL
+    title: str
+    description: str
+
+
 class DecisionRecommendation(BaseModel):
     rating: str  # STRONG_BUY, BUY, MAYBE, KEEP_CURRENT, AVOID
     confidence: float  # 0.0 to 1.0
@@ -90,3 +97,5 @@ class DecisionRecommendation(BaseModel):
     key_advantages: list[str]
     cautions_and_risks: list[str]
     explanations: list[ValueExplanation]
+    red_flags: list[RedFlag] = []
+    weighted_score: float | None = None
