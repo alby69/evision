@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { SavedVehicleResponse, Vehicle } from '../types/api';
+import { SavedVehicleResponse, Vehicle, VehicleCategory, VehicleType, FuelType } from '../types/api';
 import { listGarageVehicles, createGarageVehicle, updateGarageVehicle, deleteGarageVehicle } from '../services/api';
 import { X, Trash2, Edit, Plus, Car } from 'lucide-react';
 import { Field, TextInput, NumberInput, SelectInput } from './ui';
-import { VehicleType, FuelType } from '../types/api';
 
 interface GarageManagerProps {
   isOpen: boolean;
@@ -20,21 +19,26 @@ const FUEL_OPTIONS = [
   { value: FuelType.ELECTRICITY, label: 'Elettrico' },
 ];
 
-const TYPE_OPTIONS = [
-  { value: VehicleType.PETROL, label: 'Benzina' },
-  { value: VehicleType.DIESEL, label: 'Diesel' },
-  { value: VehicleType.HEV, label: 'Ibrida (HEV)' },
-  { value: VehicleType.BEV, label: 'Elettrica (BEV)' },
-  { value: VehicleType.PHEV, label: 'Plug-in (PHEV)' },
-  { value: VehicleType.LPG, label: 'GPL' },
-  { value: VehicleType.CNG, label: 'Metano' },
+const CATEGORY_OPTIONS = [
+  { value: VehicleCategory.CAR, label: 'Autovettura' },
+  { value: VehicleCategory.SUV, label: 'SUV / Crossover' },
+  { value: VehicleCategory.VAN, label: 'Furgone / Commerciale' },
+  { value: VehicleCategory.MOTORCYCLE, label: 'Motociclo' },
 ];
+
+const getConsumptionUnit = (fuelType: FuelType, vehicleType: VehicleType) => {
+  if (fuelType === FuelType.ELECTRICITY || vehicleType === VehicleType.BEV) {
+    return 'kWh/100km';
+  }
+  return 'L/100km';
+};
 
 const emptyVehicle: Vehicle = {
   brand: '',
   model: '',
   version: '',
   year: new Date().getFullYear(),
+  category: VehicleCategory.CAR,
   vehicle_type: VehicleType.PETROL,
   fuel_type: FuelType.PETROL,
   purchase_price: 0,
@@ -64,12 +68,6 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
     vehicle: Vehicle;
   }>({ name: '', is_default: false, vehicle: { ...emptyVehicle } });
 
-  useEffect(() => {
-    if (isOpen) {
-      loadVehicles();
-    }
-  }, [isOpen]);
-
   const loadVehicles = async () => {
     setLoading(true);
     try {
@@ -81,6 +79,12 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      loadVehicles();
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,11 +159,37 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
   };
 
   const handleSelectChange = (field: keyof Vehicle, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      vehicle: { ...prev.vehicle, [field]: value as Vehicle[keyof Vehicle] },
-    }));
+    setFormData((prev) => {
+      const updatedVehicle = { ...prev.vehicle, [field]: value as Vehicle[keyof Vehicle] };
+      if (field === 'fuel_type') {
+        if (value === FuelType.ELECTRICITY && updatedVehicle.vehicle_type !== VehicleType.PHEV) {
+          updatedVehicle.vehicle_type = VehicleType.BEV;
+        } else if (value === FuelType.PETROL && updatedVehicle.vehicle_type === VehicleType.BEV) {
+          updatedVehicle.vehicle_type = VehicleType.PETROL;
+        } else if (value === FuelType.DIESEL && updatedVehicle.vehicle_type === VehicleType.BEV) {
+          updatedVehicle.vehicle_type = VehicleType.DIESEL;
+        } else if (value === FuelType.LPG && updatedVehicle.vehicle_type === VehicleType.BEV) {
+          updatedVehicle.vehicle_type = VehicleType.LPG;
+        } else if (value === FuelType.CNG && updatedVehicle.vehicle_type === VehicleType.BEV) {
+          updatedVehicle.vehicle_type = VehicleType.CNG;
+        }
+      }
+      return {
+        ...prev,
+        vehicle: updatedVehicle,
+      };
+    });
   };
+
+  const consumptionUnit = getConsumptionUnit(
+    formData.vehicle.fuel_type,
+    formData.vehicle.vehicle_type
+  );
+
+  const isEV =
+    formData.vehicle.fuel_type === FuelType.ELECTRICITY ||
+    formData.vehicle.vehicle_type === VehicleType.BEV ||
+    formData.vehicle.vehicle_type === VehicleType.PHEV;
 
   if (!isOpen) return null;
 
@@ -285,13 +315,13 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                       ))}
                     </SelectInput>
                   </Field>
-                  <Field label="Tipo veicolo" htmlFor="gv-type">
+                  <Field label="Categoria veicolo" htmlFor="gv-category">
                     <SelectInput
-                      id="gv-type"
-                      value={formData.vehicle.vehicle_type}
-                      onChange={(e) => handleSelectChange('vehicle_type', e.target.value)}
+                      id="gv-category"
+                      value={formData.vehicle.category ?? VehicleCategory.CAR}
+                      onChange={(e) => handleSelectChange('category', e.target.value)}
                     >
-                      {TYPE_OPTIONS.map((opt) => (
+                      {CATEGORY_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
                     </SelectInput>
@@ -320,33 +350,55 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                       onChange={(e) => handleInputChange('annual_tax', Number(e.target.value) || 0)}
                     />
                   </Field>
-                  <Field label="Consumo urbano (L/100km o kWh/100km)" htmlFor="gv-urban">
+                  <Field label={`Consumo urbano (${consumptionUnit})`} htmlFor="gv-urban">
                     <NumberInput
                       id="gv-urban"
-                      min={0}
+                      min={0.1}
                       step={0.1}
                       value={formData.vehicle.urban_consumption}
                       onChange={(e) => handleInputChange('urban_consumption', Number(e.target.value) || 0)}
                     />
                   </Field>
-                  <Field label="Consumo extraurbano" htmlFor="gv-extra">
+                  <Field label={`Consumo extraurbano (${consumptionUnit})`} htmlFor="gv-extra">
                     <NumberInput
                       id="gv-extra"
-                      min={0}
+                      min={0.1}
                       step={0.1}
                       value={formData.vehicle.extraurban_consumption}
                       onChange={(e) => handleInputChange('extraurban_consumption', Number(e.target.value) || 0)}
                     />
                   </Field>
-                  <Field label="Consumo autostrada" htmlFor="gv-highway">
+                  <Field label={`Consumo autostrada (${consumptionUnit})`} htmlFor="gv-highway">
                     <NumberInput
                       id="gv-highway"
-                      min={0}
+                      min={0.1}
                       step={0.1}
                       value={formData.vehicle.highway_consumption}
                       onChange={(e) => handleInputChange('highway_consumption', Number(e.target.value) || 0)}
                     />
                   </Field>
+                  {isEV && (
+                    <>
+                      <Field label="Capacità batteria lorda (kWh)" htmlFor="gv-battery">
+                        <NumberInput
+                          id="gv-battery"
+                          min={0}
+                          step={0.1}
+                          value={formData.vehicle.battery_capacity ?? 0}
+                          onChange={(e) => handleInputChange('battery_capacity', Number(e.target.value) || 0)}
+                        />
+                      </Field>
+                      <Field label="Autonomia WLTP dichiarata (km)" htmlFor="gv-wltp">
+                        <NumberInput
+                          id="gv-wltp"
+                          min={0}
+                          step={1}
+                          value={formData.vehicle.wltp_range ?? 0}
+                          onChange={(e) => handleInputChange('wltp_range', Number(e.target.value) || 0)}
+                        />
+                      </Field>
+                    </>
+                  )}
                   <Field label="Manutenzione annua (€)" htmlFor="gv-maint">
                     <NumberInput
                       id="gv-maint"
@@ -431,7 +483,7 @@ export const GarageManager: React.FC<GarageManagerProps> = ({
                           <p className="mt-0.5 text-xs text-muted-foreground">
                             Valore: {v.vehicle_data.current_value ? `€${v.vehicle_data.current_value.toLocaleString()}` : 'N/D'} ·{' '}
                             Consumo: {v.vehicle_data.extraurban_consumption || 0}{' '}
-                            {v.vehicle_data.fuel_type === FuelType.ELECTRICITY ? 'kWh/100km' : 'L/100km'}
+                            {getConsumptionUnit(v.vehicle_data.fuel_type, v.vehicle_data.vehicle_type)}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
